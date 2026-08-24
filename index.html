@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Guionter — Contador de Palabras y Caracteres</title>
+<meta name="description" content="Analiza tus textos: palabras, caracteres, oraciones, párrafos, nivel de lectura, tiempo de lectura y de habla, densidad de palabras clave y corrector ortográfico.">
+<meta name="theme-color" content="#08CB00">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* neutral paper: light grey, per brand spec */
+    --bg:#EEEEEE;
+    --surface:#FFFFFF;
+    --surface-alt:#E4E4E4;
+    --border:#D6D6D6;
+    --text:#000000;
+    --text-dim:#5C6152;
+    /* terminal green: primary accent, per brand spec */
+    --accent:#08CB00;
+    --accent-dim:#E1F5DC;
+    --accent-contrast:#000000;
+    /* dark olive: secondary ink for reading-level / info */
+    --accent2:#253900;
+    --accent2-dim:#E4E8D6;
+    --good:#1B8A5A;
+    --warn:#B45309;
+    --bad:#C0392B;
+    --shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.08);
+    --radius:14px;
+    --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+    --font: "Work Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#000000;
+      --surface:#14190A;
+      --surface-alt:#1B2210;
+      --border:#2A3418;
+      --text:#EEEEEE;
+      --text-dim:#9BA88F;
+      --accent:#08CB00;
+      --accent-dim:#16240A;
+      --accent-contrast:#000000;
+      --accent2:#B7C98A;
+      --accent2-dim:#212B10;
+      --good:#3ecf8e;
+      --warn:#e0a94f;
+      --bad:#E2694F;
+      --shadow: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#000000;
+    --surface:#14190A;
+    --surface-alt:#1B2210;
+    --border:#2A3418;
+    --text:#EEEEEE;
+    --text-dim:#9BA88F;
+    --accent:#08CB00;
+    --accent-dim:#16240A;
+    --accent-contrast:#000000;
+    --accent2:#B7C98A;
+    --accent2-dim:#212B10;
+    --good:#3ecf8e;
+    --warn:#e0a94f;
+    --bad:#E2694F;
+    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.55);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font);
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{
+    max-width:1440px;
+    margin:0 auto;
+    padding:20px 20px 60px;
+  }
+  header.top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .brand .logo{
+    width:38px;height:38px;
+    flex-shrink:0;
+  }
+  .brand .logo svg{display:block;width:100%;height:100%;}
+  .brand h1{font-family:var(--font-display);font-size:21px;margin:0;font-weight:700;letter-spacing:-.01em;text-wrap:balance;}
+  .brand p{margin:0;font-size:12px;color:var(--text-dim);}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .toolbar-divider{width:1px;align-self:stretch;background:var(--border);margin:2px 2px;}
+  .btn{
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--text);
+    padding:8px 13px;
+    border-radius:10px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    transition:transform .08s ease, background .15s ease;
+  }
+  .btn:hover{background:var(--surface-alt);}
+  .btn:active{transform:scale(.97);}
+  .btn.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:var(--accent-contrast);
+  }
+  .btn.primary:hover{filter:brightness(1.05);}
+  .btn:disabled{opacity:.5;cursor:default;}
+  select.lang{
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--text);
+    padding:8px 10px;
+    border-radius:10px;
+    font-size:13px;
+    font-weight:600;
+  }
+  main.layout{
+    display:grid;
+    grid-template-columns:2.4fr 1fr;
+    gap:18px;
+    align-items:stretch;
+  }
+  @media (max-width:860px){
+    main.layout{grid-template-columns:1fr;}
+  }
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:16px;
+  }
+  .editor-card{padding:0;overflow:hidden;display:flex;flex-direction:column;}
+  .editor-toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 14px;
+    border-bottom:1px solid var(--border);
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .editor-toolbar .hint{font-size:12px;color:var(--text-dim);}
+  textarea#input{
+    width:100%;
+    flex:1 1 auto;
+    min-height:640px;
+    border:none;
+    resize:vertical;
+    padding:18px;
+    font-size:15.5px;
+    line-height:1.65;
+    color:var(--text);
+    background:transparent;
+    font-family:var(--font);
+    outline:none;
+  }
+  textarea#input::placeholder{color:var(--text-dim);}
+  .stats-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+  }
+  .stat{
+    background:var(--surface-alt);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:12px 14px;
+  }
+  .stat .val{font-family:var(--font-mono);font-size:22px;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums;}
+  .stat .lbl{font-size:12px;color:var(--text-dim);margin-top:2px;font-weight:600;}
+  .section-title{
+    font-family:var(--font-display);
+    font-size:15px;
+    color:var(--text);
+    font-weight:600;
+    margin:0 0 10px;
+  }
+  .readlevel-box{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 14px;
+    background:var(--surface-alt);
+    border:1px solid var(--border);
+    border-radius:12px;
+  }
+  .readlevel-badge{
+    font-family:var(--font-mono);
+    font-size:13px;
+    font-weight:600;
+    padding:5px 11px;
+    border-radius:999px;
+    background:var(--accent2-dim);
+    color:var(--accent2);
+    white-space:nowrap;
+  }
+  .readlevel-detail{font-size:12px;color:var(--text-dim);line-height:1.5;}
+  .tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+  .tab{
+    font-size:12px;font-weight:700;padding:6px 11px;border-radius:999px;
+    border:1px solid var(--border);background:var(--surface-alt);color:var(--text-dim);
+    cursor:pointer;
+  }
+  .tab.active{background:var(--accent);border-color:var(--accent);color:var(--accent-contrast);}
+  table.kw{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;}
+  table.kw th{
+    text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.03em;
+    color:var(--text-dim);padding:6px 4px;border-bottom:1px solid var(--border);
+  }
+  table.kw td{padding:7px 4px;border-bottom:1px solid var(--border);}
+  table.kw tr:last-child td{border-bottom:none;}
+  .kw-word{font-weight:600;}
+  .kw-bar-wrap{background:var(--border);border-radius:4px;height:6px;width:70px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:8px;}
+  .kw-bar{background:var(--accent);height:100%;}
+  .empty-hint{font-size:12.5px;color:var(--text-dim);padding:6px 2px;}
+  label.check-row{
+    display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-dim);
+    margin-bottom:10px;font-weight:600;cursor:pointer;
+  }
+  .grammar-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;}
+  .grammar-item{
+    background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;
+    padding:10px 12px;font-size:13px;
+  }
+  .grammar-item .msg{font-weight:700;margin-bottom:3px;}
+  .grammar-item .ctx{color:var(--text-dim);font-size:12.5px;}
+  .grammar-item .ctx mark{background:var(--bad);color:#fff;border-radius:3px;padding:0 2px;}
+  .grammar-item .suggestions{margin-top:5px;font-size:12.5px;}
+  .grammar-item .suggestions b{color:var(--good);}
+  .status-line{font-size:12.5px;color:var(--text-dim);margin-top:8px;}
+  details#ttsDictionary{border:1px solid var(--border);border-radius:12px;padding:10px 14px;background:var(--surface-alt);}
+  details#ttsDictionary summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--text);list-style:none;}
+  details#ttsDictionary summary::-webkit-details-marker{display:none;}
+  details#ttsDictionary summary::before{content:"▸ ";color:var(--accent);}
+  details#ttsDictionary[open] summary::before{content:"▾ ";}
+  .tts-dict-item{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:6px 10px;background:var(--surface);border:1px solid var(--border);
+    border-radius:8px;margin-top:6px;font-size:13px;
+  }
+  .tts-dict-pair{font-weight:600;}
+  .tts-dict-remove{
+    background:none;border:none;color:var(--text-dim);cursor:pointer;
+    font-size:14px;padding:2px 7px;border-radius:6px;line-height:1;
+  }
+  .tts-dict-remove:hover{color:var(--bad);background:var(--border);}
+  .tts-dict-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+  .tts-dict-field{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--text-dim);flex:1 1 220px;min-width:200px;}
+  .tts-dict-field input[type="text"]{
+    border:1px solid var(--border);background:var(--surface-alt);color:var(--text);
+    padding:8px 10px;border-radius:8px;font-size:13px;font-family:var(--font);
+  }
+  .status-line.ok{color:var(--good);font-weight:700;}
+  .status-line.err{color:var(--bad);font-weight:700;}
+  .footer-note{
+    margin-top:26px;font-size:12px;color:var(--text-dim);text-align:center;line-height:1.6;
+  }
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="0" width="100" height="100" rx="22" fill="#08CB00"/>
+          <text x="50" y="66" font-family="Fraunces, Georgia, serif" font-weight="700" font-size="56" fill="#000000" text-anchor="middle">G</text>
+          <rect x="32" y="71" width="36" height="6.5" rx="3.25" fill="#000000"/>
+        </svg>
+      </div>
+      <div>
+        <h1 id="t-title">Guionter</h1>
+        <p id="t-subtitle">Analizador de texto en tiempo real</p>
+      </div>
+    </div>
+    <div class="toolbar">
+      <select class="lang" id="langSelect">
+        <option value="es">Español</option>
+        <option value="en">English</option>
+      </select>
+      <button class="btn" id="btnTheme" type="button">🌓</button>
+      <button class="btn" id="btnCopy" type="button"><span id="t-copy">Copiar</span></button>
+      <button class="btn" id="btnClear" type="button"><span id="t-clear">Limpiar</span></button>
+      <span class="toolbar-divider"></span>
+      <button class="btn" id="btnWord" type="button">📄 <span id="t-downloadWord">Word</span></button>
+      <button class="btn" id="btnPdf" type="button">🧾 <span id="t-downloadPdf">PDF</span></button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Editor -->
+    <section class="card editor-card">
+      <div class="editor-toolbar">
+        <span class="hint" id="t-editorHint">Escribe o pega tu texto abajo. La ortografía se revisa automáticamente mientras escribes.</span>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <button class="btn" id="btnAdaptNumbers" type="button">🔢 <span id="t-adaptNumbersBtn">Adaptar texto para TTS</span></button>
+          <span class="hint" id="adaptNumbersStatus"></span>
+        </div>
+      </div>
+      <details id="ttsDictionary" style="margin:0 14px 10px;">
+        <summary id="t-ttsDictTitle">Diccionario de pronunciación (TTS)</summary>
+        <div class="tts-dict-row" style="margin-top:10px;">
+          <label class="tts-dict-field">
+            <span id="t-ttsDictFromLabel">Palabra o frase</span>
+            <input type="text" id="ttsDictFrom">
+          </label>
+          <label class="tts-dict-field">
+            <span id="t-ttsDictToLabel">Cómo debe sonar</span>
+            <input type="text" id="ttsDictTo">
+          </label>
+          <button class="btn" id="btnTtsDictAdd" type="button" style="align-self:flex-end;"><span id="t-ttsDictAdd">Agregar</span></button>
+        </div>
+        <div id="ttsDictList"></div>
+        <p class="empty-hint" id="t-ttsDictEmpty" style="display:none;margin:8px 0 0;">Aún no tienes reemplazos guardados.</p>
+      </details>
+      <textarea id="input" spellcheck="true" lang="es" placeholder="Empieza a escribir o pega tu texto aquí…"></textarea>
+    </section>
+
+    <!-- Stats -->
+    <section style="display:flex;flex-direction:column;gap:14px;">
+      <div class="card">
+        <p class="section-title" id="t-statsTitle">Estadísticas</p>
+        <div class="stats-grid">
+          <div class="stat"><div class="val" id="statWords">0</div><div class="lbl" id="t-words">Palabras</div></div>
+          <div class="stat"><div class="val" id="statChars">0</div><div class="lbl" id="t-chars">Caracteres (con espacios)</div></div>
+          <div class="stat"><div class="val" id="statCharsNoSpace">0</div><div class="lbl" id="t-charsNoSpace">Caracteres (sin espacios)</div></div>
+          <div class="stat"><div class="val" id="statSentences">0</div><div class="lbl" id="t-sentences">Oraciones</div></div>
+          <div class="stat"><div class="val" id="statParagraphs">0</div><div class="lbl" id="t-paragraphs">Párrafos</div></div>
+          <div class="stat"><div class="val" id="statReadTime">0 s</div><div class="lbl" id="t-readTime">Tiempo de lectura</div></div>
+          <div class="stat"><div class="val" id="statSpeakTime">0 s</div><div class="lbl" id="t-speakTime">Tiempo de habla</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="section-title" id="t-readLevelTitle">Nivel de lectura</p>
+        <div class="readlevel-box">
+          <span class="readlevel-badge" id="readLevelBadge">—</span>
+          <span class="readlevel-detail" id="readLevelDetail">—</span>
+        </div>
+      </div>
+
+      <!-- Keyword density -->
+      <div class="card">
+        <p class="section-title" id="t-kwTitle">Densidad de palabras clave</p>
+        <label class="check-row">
+          <input type="checkbox" id="excludeCommon" checked>
+          <span id="t-excludeCommon">Excluir palabras comunes (el, la, de, and, the…)</span>
+        </label>
+        <div class="tabs">
+          <button class="tab active" data-n="1" id="tab1">1 palabra</button>
+          <button class="tab" data-n="2" id="tab2">2 palabras</button>
+          <button class="tab" data-n="3" id="tab3">3 palabras</button>
+        </div>
+        <div id="kwTableWrap"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Grammar / spellcheck -->
+  <section class="card" style="margin-top:18px;">
+    <p class="section-title" id="t-grammarTitle">Corrector ortográfico y gramatical</p>
+    <p class="empty-hint" id="t-grammarHint" style="margin-bottom:10px;">
+      El subrayado rojo del cuadro de texto ya corrige ortografía automáticamente (usa el corrector de tu navegador/sistema). Para un análisis más completo (gramática, estilo) usa el botón de abajo — necesita conexión a internet.
+    </p>
+    <button class="btn primary" id="btnGrammar" type="button"><span id="t-grammarBtn">Revisar ortografía y gramática</span></button>
+    <div class="status-line" id="grammarStatus"></div>
+    <div class="grammar-list" id="grammarList" style="margin-top:12px;"></div>
+  </section>
+
+  <p class="footer-note" id="t-footer">
+    Guionter funciona sin conexión para el conteo de texto. Instálalo desde el menú del navegador para usarlo como app de escritorio o en Android ("Agregar a pantalla de inicio" / "Instalar app").
+  </p>
+</div>
+
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

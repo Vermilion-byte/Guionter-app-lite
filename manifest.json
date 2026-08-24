@@ -1,0 +1,16 @@
+{
+  "name": "Guionter - Contador de Palabras",
+  "short_name": "Guionter",
+  "description": "Analiza palabras, caracteres, oraciones, párrafos, nivel de lectura, tiempo de lectura/habla, densidad de palabras clave y corrige ortografía y gramática.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#EEEEEE",
+  "theme_color": "#08CB00",
+  "orientation": "any",
+  "lang": "es",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
