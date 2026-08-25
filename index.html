@@ -256,6 +256,11 @@
   .grammar-item .suggestions{margin-top:5px;font-size:12.5px;}
   .grammar-item .suggestions b{color:var(--good);}
   .status-line{font-size:12.5px;color:var(--text-dim);margin-top:8px;}
+  details#scriptLibrary{border:1px solid var(--border);border-radius:12px;padding:10px 14px;background:var(--surface-alt);margin:0 14px 10px;}
+  details#scriptLibrary summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--text);list-style:none;}
+  details#scriptLibrary summary::-webkit-details-marker{display:none;}
+  details#scriptLibrary summary::before{content:"▸ ";color:var(--accent);}
+  details#scriptLibrary[open] summary::before{content:"▾ ";}
   details#ttsDictionary{border:1px solid var(--border);border-radius:12px;padding:10px 14px;background:var(--surface-alt);}
   details#ttsDictionary summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--text);list-style:none;}
   details#ttsDictionary summary::-webkit-details-marker{display:none;}
@@ -274,7 +279,7 @@
   .tts-dict-remove:hover{color:var(--bad);background:var(--border);}
   .tts-dict-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
   .tts-dict-field{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--text-dim);flex:1 1 220px;min-width:200px;}
-  .tts-dict-field input[type="text"]{
+  .tts-dict-field input[type="text"], .tts-dict-field select{
     border:1px solid var(--border);background:var(--surface-alt);color:var(--text);
     padding:8px 10px;border-radius:8px;font-size:13px;font-family:var(--font);
   }
@@ -315,6 +320,11 @@
       <span class="toolbar-divider"></span>
       <button class="btn" id="btnWord" type="button">📄 <span id="t-downloadWord">Word</span></button>
       <button class="btn" id="btnPdf" type="button">🧾 <span id="t-downloadPdf">PDF</span></button>
+      <button class="btn" id="btnSrt" type="button">🎬 <span id="t-downloadSrt">SRT</span></button>
+      <span class="toolbar-divider"></span>
+      <button class="btn" id="btnExportConfig" type="button">💾 <span id="t-exportConfig">Backup</span></button>
+      <button class="btn" id="btnImportConfig" type="button">📥 <span id="t-importConfig">Restaurar</span></button>
+      <input type="file" id="importConfigFile" accept="application/json" hidden>
     </div>
   </header>
 
@@ -328,6 +338,22 @@
           <span class="hint" id="adaptNumbersStatus"></span>
         </div>
       </div>
+      <details id="scriptLibrary">
+        <summary id="t-scriptLibraryTitle">Mis guiones guardados</summary>
+        <div class="tts-dict-row" style="margin-top:10px;align-items:flex-end;">
+          <label class="tts-dict-field">
+            <span id="t-scriptSelectLabel">Guion guardado</span>
+            <select id="scriptSelect"></select>
+          </label>
+          <label class="tts-dict-field">
+            <span id="t-scriptNameLabel">Nombre del guion</span>
+            <input type="text" id="scriptName">
+          </label>
+          <button class="btn" id="btnScriptSave" type="button">💾 <span id="t-scriptSave">Guardar guion actual</span></button>
+          <button class="btn" id="btnScriptDelete" type="button" disabled><span id="t-scriptDelete">Eliminar</span></button>
+        </div>
+        <div class="status-line" id="scriptStatus"></div>
+      </details>
       <details id="ttsDictionary" style="margin:0 14px 10px;">
         <summary id="t-ttsDictTitle">Diccionario de pronunciación (TTS)</summary>
         <div class="tts-dict-row" style="margin-top:10px;">

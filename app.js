@@ -41,6 +41,16 @@
       downloadPdf: "PDF",
       downloadWordTitle: "Descargar el texto como documento de Word (.doc)",
       downloadPdfTitle: "Descargar el texto como PDF",
+      downloadSrt: "SRT",
+      downloadSrtTitle: "Descargar el guion como subtítulos (.srt) con tiempos estimados por párrafo",
+      downloadSrtError: "No se pudo generar el archivo .srt.",
+      exportConfig: "Backup",
+      exportConfigTitle: "Exportar tu diccionario TTS y guiones guardados en un archivo",
+      exportConfigError: "No se pudo generar el archivo de respaldo.",
+      importConfig: "Restaurar",
+      importConfigTitle: "Importar un archivo de respaldo (combina con lo que ya tienes, no borra nada existente)",
+      importConfigError: "No se pudo leer ese archivo de respaldo — revisa que sea un backup válido de Guionter.",
+      importConfigDone: (dict, scriptsN) => `Restaurado: ${dict} palabra(s) del diccionario, ${scriptsN} guion(es).`,
       downloadEmpty: "Escribe algo de texto antes de descargar.",
       pdfStatsHeading: "Resumen",
       footer: 'Guionter funciona sin conexión para el conteo de texto. Instálalo desde el menú del navegador para usarlo como app de escritorio o en Android ("Agregar a pantalla de inicio" / "Instalar app").',
@@ -62,6 +72,17 @@
       adaptNumbersBtn: "Adaptar texto para TTS",
       adaptNumbersNone: "No se encontró nada que adaptar (ni citas numéricas ni palabras de tu diccionario).",
       adaptNumbersDone: (n) => `${n} cambio${n === 1 ? "" : "s"} aplicado${n === 1 ? "" : "s"} al texto — revisa antes de generar el audio.`,
+      scriptLibraryTitle: "Mis guiones guardados",
+      scriptSelectLabel: "Guion guardado",
+      scriptSelectPlaceholder: "— Elige un guion —",
+      scriptNameLabel: "Nombre del guion",
+      scriptNamePlaceholder: "Ej: Video de la semana 12",
+      scriptSave: "Guardar guion actual",
+      scriptDelete: "Eliminar",
+      scriptNeedName: "Escribe un nombre para guardar el guion.",
+      scriptSaved: (name) => `Guion "${name}" guardado.`,
+      scriptLoaded: (name) => `Guion "${name}" cargado.`,
+      scriptDeleted: (name) => `Guion "${name}" eliminado.`,
       ttsDictTitle: "Diccionario de pronunciación (TTS)",
       ttsDictFromLabel: "Palabra o frase",
       ttsDictToLabel: "Cómo debe sonar",
@@ -102,6 +123,16 @@
       downloadPdf: "PDF",
       downloadWordTitle: "Download the text as a Word document (.doc)",
       downloadPdfTitle: "Download the text as a PDF",
+      downloadSrt: "SRT",
+      downloadSrtTitle: "Download the script as subtitles (.srt) with estimated per-paragraph timing",
+      downloadSrtError: "Could not generate the .srt file.",
+      exportConfig: "Backup",
+      exportConfigTitle: "Export your TTS dictionary and saved scripts into a file",
+      exportConfigError: "Could not generate the backup file.",
+      importConfig: "Restore",
+      importConfigTitle: "Import a backup file (merges with what you already have, deletes nothing existing)",
+      importConfigError: "Could not read that backup file — check that it's a valid Guionter backup.",
+      importConfigDone: (dict, scriptsN) => `Restored: ${dict} dictionary word(s), ${scriptsN} script(s).`,
       downloadEmpty: "Write some text before downloading.",
       pdfStatsHeading: "Summary",
       footer: 'Guionter works offline for text counting. Install it from your browser menu to use it as a desktop app or on Android ("Add to home screen" / "Install app").',
@@ -123,6 +154,17 @@
       adaptNumbersBtn: "Adapt text for TTS",
       adaptNumbersNone: "Nothing to adapt was found (no numeric citations or dictionary words).",
       adaptNumbersDone: (n) => `${n} change${n === 1 ? "" : "s"} applied to the text — check it before generating audio.`,
+      scriptLibraryTitle: "My saved scripts",
+      scriptSelectLabel: "Saved script",
+      scriptSelectPlaceholder: "— Choose a script —",
+      scriptNameLabel: "Script name",
+      scriptNamePlaceholder: "E.g.: This week's video",
+      scriptSave: "Save current script",
+      scriptDelete: "Delete",
+      scriptNeedName: "Type a name to save the script.",
+      scriptSaved: (name) => `Script "${name}" saved.`,
+      scriptLoaded: (name) => `Script "${name}" loaded.`,
+      scriptDeleted: (name) => `Script "${name}" deleted.`,
       ttsDictTitle: "Pronunciation dictionary (TTS)",
       ttsDictFromLabel: "Word or phrase",
       ttsDictToLabel: "How it should sound",
@@ -180,7 +222,20 @@
     $("t-downloadPdf").textContent = t.downloadPdf;
     $("btnWord").title = t.downloadWordTitle;
     $("btnPdf").title = t.downloadPdfTitle;
+    $("t-downloadSrt").textContent = t.downloadSrt;
+    $("btnSrt").title = t.downloadSrtTitle;
+    $("t-exportConfig").textContent = t.exportConfig;
+    $("btnExportConfig").title = t.exportConfigTitle;
+    $("t-importConfig").textContent = t.importConfig;
+    $("btnImportConfig").title = t.importConfigTitle;
     $("t-adaptNumbersBtn").textContent = t.adaptNumbersBtn;
+    $("t-scriptLibraryTitle").textContent = t.scriptLibraryTitle;
+    $("t-scriptSelectLabel").textContent = t.scriptSelectLabel;
+    $("t-scriptNameLabel").textContent = t.scriptNameLabel;
+    $("t-scriptSave").textContent = t.scriptSave;
+    $("t-scriptDelete").textContent = t.scriptDelete;
+    $("scriptName").placeholder = t.scriptNamePlaceholder;
+    renderScriptSelect();
     $("t-ttsDictTitle").textContent = t.ttsDictTitle;
     $("t-ttsDictFromLabel").textContent = t.ttsDictFromLabel;
     $("t-ttsDictToLabel").textContent = t.ttsDictToLabel;
@@ -660,6 +715,102 @@
   }
 
   // ---------------------------------------------------------------------
+  // SRT subtitle export — one cue per paragraph, timed with the same
+  // words-per-minute assumption used for the "speaking time" stat, so the
+  // estimate stays consistent with what the app already shows on screen.
+  // ---------------------------------------------------------------------
+  function srtTimestamp(totalSeconds) {
+    const clamped = Math.max(0, totalSeconds);
+    const wholeSeconds = Math.floor(clamped);
+    const ms = Math.round((clamped - wholeSeconds) * 1000);
+    const h = Math.floor(wholeSeconds / 3600);
+    const m = Math.floor(wholeSeconds / 60) % 60;
+    const s = wholeSeconds % 60;
+    const pad = (n, len) => String(n).padStart(len, "0");
+    return `${pad(h, 2)}:${pad(m, 2)}:${pad(s, 2)},${pad(ms, 3)}`;
+  }
+
+  function buildSrtFromText(text) {
+    const SPEAK_WPM = 130; // matches the constant used in analyze() for statSpeakTime
+    const paragraphs = text.trim().split(/\n+/).map(p => p.trim()).filter(Boolean);
+    let cursor = 0;
+    const blocks = [];
+    paragraphs.forEach((para, i) => {
+      const words = para.split(/\s+/).filter(Boolean).length;
+      const duration = Math.max(1, (words / SPEAK_WPM) * 60);
+      const start = cursor;
+      const end = cursor + duration;
+      blocks.push(`${i + 1}\n${srtTimestamp(start)} --> ${srtTimestamp(end)}\n${para}\n`);
+      cursor = end;
+    });
+    return blocks.join("\n");
+  }
+
+  async function downloadSrt() {
+    const t = STR[lang];
+    const text = input.value;
+    if (!text.trim()) { flashDownloadStatus(t.downloadEmpty); return; }
+    const srt = buildSrtFromText(text);
+    const blob = new Blob([srt], { type: "text/plain;charset=utf-8" });
+    await saveGeneratedFile("guionter-subtitulos.srt", blob, t.downloadSrtError);
+  }
+
+  // ---------------------------------------------------------------------
+  // Export/import configuration backup: bundles the TTS dictionary and
+  // saved scripts into one JSON file, so the user can back them up or carry
+  // them to another machine/browser. Import merges by name instead of
+  // replacing, so it never silently deletes anything. (Other Guionter builds
+  // may include extra fields in their own backups — those are simply
+  // ignored here, and a backup made in this build imports cleanly there too.)
+  // ---------------------------------------------------------------------
+  async function exportConfigBackup() {
+    const t = STR[lang];
+    const payload = {
+      guionterBackupVersion: 1,
+      exportedAt: Date.now(),
+      ttsDictionary: ttsDictionary,
+      scripts: scripts
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    await saveGeneratedFile("guionter-backup.json", blob, t.exportConfigError);
+  }
+
+  async function importConfigBackup(file) {
+    const t = STR[lang];
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      let dictCount = 0, scriptCount = 0;
+
+      if (Array.isArray(data.ttsDictionary)) {
+        data.ttsDictionary.forEach(entry => {
+          if (!entry || !entry.from) return;
+          const idx = ttsDictionary.findIndex(e => e.from.toLowerCase() === entry.from.toLowerCase());
+          if (idx >= 0) ttsDictionary[idx] = entry; else ttsDictionary.push(entry);
+          dictCount++;
+        });
+        saveTtsDictionary();
+        renderTtsDictionary();
+      }
+
+      if (Array.isArray(data.scripts)) {
+        data.scripts.forEach(entry => {
+          if (!entry || !entry.name || typeof entry.text !== "string") return;
+          const idx = scripts.findIndex(s => s.name.toLowerCase() === entry.name.toLowerCase());
+          if (idx >= 0) scripts[idx] = entry; else scripts.push(entry);
+          scriptCount++;
+        });
+        saveScriptsToStorage();
+        renderScriptSelect();
+      }
+
+      flashDownloadStatus(t.importConfigDone(dictCount, scriptCount));
+    } catch (e) {
+      flashDownloadStatus(t.importConfigError);
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // TTS text adaptation: numeric citations (e.g. "3:16", a chapter:verse
   // reference) read out loud as if they were clock times ("three sixteen")
   // by some TTS voices. Spelling both numbers out as words and dropping the
@@ -746,6 +897,98 @@
       if (c !== undefined) parts.push(numberToWords(Number(c)));
       return parts.join(" ");
     });
+  }
+
+  // ---------------------------------------------------------------------
+  // Saved scripts library: named text documents (not just the single
+  // autosaved draft), so the user can keep several scripts/projects around
+  // and switch between them without losing anything. Saved per-browser in
+  // localStorage.
+  // ---------------------------------------------------------------------
+  const SCRIPTS_KEY = "guionter-scripts";
+
+  function loadScripts() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(SCRIPTS_KEY) || "[]");
+      return Array.isArray(parsed) ? parsed.filter(s => s && s.name && typeof s.text === "string") : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  function saveScriptsToStorage() {
+    try { localStorage.setItem(SCRIPTS_KEY, JSON.stringify(scripts)); } catch (e) {}
+  }
+  let scripts = loadScripts();
+
+  function renderScriptSelect() {
+    const t = STR[lang];
+    const sel = $("scriptSelect");
+    const current = sel.value;
+    sel.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = t.scriptSelectPlaceholder;
+    sel.appendChild(placeholder);
+    scripts.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s.name;
+      opt.textContent = s.name;
+      sel.appendChild(opt);
+    });
+    sel.value = scripts.some(s => s.name === current) ? current : "";
+  }
+
+  // Saving overwrites an existing script with the same name (case-insensitive)
+  // rather than clearing the name field afterwards — scripts get edited
+  // continuously, so keeping the name filled in makes the next save (an
+  // update to the same script) a single click instead of retyping the name.
+  function saveScript() {
+    const t = STR[lang];
+    const nameEl = $("scriptName");
+    const name = nameEl.value.trim();
+    const status = $("scriptStatus");
+    status.classList.remove("ok", "err");
+    if (!name) { status.textContent = t.scriptNeedName; status.classList.add("err"); return; }
+    const existingIdx = scripts.findIndex(s => s.name.toLowerCase() === name.toLowerCase());
+    const entry = { name, text: input.value, updatedAt: Date.now() };
+    if (existingIdx >= 0) scripts[existingIdx] = entry;
+    else scripts.push(entry);
+    saveScriptsToStorage();
+    renderScriptSelect();
+    $("scriptSelect").value = name;
+    $("btnScriptDelete").disabled = false;
+    status.textContent = t.scriptSaved(name);
+    status.classList.add("ok");
+  }
+
+  function loadScriptByName(name) {
+    const t = STR[lang];
+    const status = $("scriptStatus");
+    status.classList.remove("ok", "err");
+    $("btnScriptDelete").disabled = !name;
+    if (!name) { status.textContent = ""; return; }
+    const scriptEntry = scripts.find(s => s.name === name);
+    if (!scriptEntry) return;
+    input.value = scriptEntry.text;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    $("scriptName").value = name;
+    status.textContent = t.scriptLoaded(name);
+    status.classList.add("ok");
+  }
+
+  function deleteSelectedScript() {
+    const t = STR[lang];
+    const sel = $("scriptSelect");
+    const name = sel.value;
+    if (!name) return;
+    scripts = scripts.filter(s => s.name !== name);
+    saveScriptsToStorage();
+    renderScriptSelect();
+    $("scriptName").value = "";
+    $("btnScriptDelete").disabled = true;
+    $("scriptStatus").textContent = t.scriptDeleted(name);
+    $("scriptStatus").classList.remove("err");
+    $("scriptStatus").classList.add("ok");
   }
 
   // ---------------------------------------------------------------------
@@ -941,6 +1184,19 @@
   $("btnGrammar").addEventListener("click", runGrammarCheck);
   $("btnWord").addEventListener("click", downloadWord);
   $("btnPdf").addEventListener("click", downloadPdf);
+  $("btnSrt").addEventListener("click", downloadSrt);
+  $("btnExportConfig").addEventListener("click", exportConfigBackup);
+  $("btnImportConfig").addEventListener("click", () => $("importConfigFile").click());
+  $("importConfigFile").addEventListener("change", async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    await importConfigBackup(file);
+    e.target.value = "";
+  });
+  $("btnScriptSave").addEventListener("click", saveScript);
+  $("btnScriptDelete").addEventListener("click", deleteSelectedScript);
+  $("scriptSelect").addEventListener("change", () => loadScriptByName($("scriptSelect").value));
+  $("scriptName").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); saveScript(); } });
   $("btnAdaptNumbers").addEventListener("click", adaptEditorTextForTts);
   $("btnTtsDictAdd").addEventListener("click", addTtsDictionaryEntry);
   ["ttsDictFrom", "ttsDictTo"].forEach(id => {
