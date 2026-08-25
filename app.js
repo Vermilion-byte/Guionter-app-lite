@@ -72,6 +72,12 @@
       adaptNumbersBtn: "Adaptar texto para TTS",
       adaptNumbersNone: "No se encontró nada que adaptar (ni citas numéricas ni palabras de tu diccionario).",
       adaptNumbersDone: (n) => `${n} cambio${n === 1 ? "" : "s"} aplicado${n === 1 ? "" : "s"} al texto — revisa antes de generar el audio.`,
+      caseConvertHint: "Convertir el texto a:",
+      caseUpperBtn: "MAYÚSCULAS",
+      caseLowerBtn: "minúsculas",
+      caseTitleBtn: "Capitalizar Cada Palabra",
+      caseSentenceBtn: "Oración",
+      caseConvertEmpty: "No hay texto en el editor para convertir.",
       scriptLibraryTitle: "Mis guiones guardados",
       scriptSelectLabel: "Guion guardado",
       scriptSelectPlaceholder: "— Elige un guion —",
@@ -154,6 +160,12 @@
       adaptNumbersBtn: "Adapt text for TTS",
       adaptNumbersNone: "Nothing to adapt was found (no numeric citations or dictionary words).",
       adaptNumbersDone: (n) => `${n} change${n === 1 ? "" : "s"} applied to the text — check it before generating audio.`,
+      caseConvertHint: "Convert the text to:",
+      caseUpperBtn: "UPPERCASE",
+      caseLowerBtn: "lowercase",
+      caseTitleBtn: "Capitalize Each Word",
+      caseSentenceBtn: "Sentence case",
+      caseConvertEmpty: "There's no text in the editor to convert.",
       scriptLibraryTitle: "My saved scripts",
       scriptSelectLabel: "Saved script",
       scriptSelectPlaceholder: "— Choose a script —",
@@ -229,6 +241,11 @@
     $("t-importConfig").textContent = t.importConfig;
     $("btnImportConfig").title = t.importConfigTitle;
     $("t-adaptNumbersBtn").textContent = t.adaptNumbersBtn;
+    $("t-caseConvertHint").textContent = t.caseConvertHint;
+    $("t-caseUpperBtn").textContent = t.caseUpperBtn;
+    $("t-caseLowerBtn").textContent = t.caseLowerBtn;
+    $("t-caseTitleBtn").textContent = t.caseTitleBtn;
+    $("t-caseSentenceBtn").textContent = t.caseSentenceBtn;
     $("t-scriptLibraryTitle").textContent = t.scriptLibraryTitle;
     $("t-scriptSelectLabel").textContent = t.scriptSelectLabel;
     $("t-scriptNameLabel").textContent = t.scriptNameLabel;
@@ -1081,6 +1098,41 @@
     return { text: result, count };
   }
 
+  // ---------------------------------------------------------------------
+  // Mayúsculas / minúsculas: quick case conversion for the editor's own text.
+  // Same "rewrite in place, undoable with Ctrl+Z" pattern as adaptEditorTextForTts.
+  // ---------------------------------------------------------------------
+
+  // Capitalizes the first letter of every word, lowercasing the rest.
+  // Uses \p{L} (Unicode letters) so accented characters (á, é, ñ...) count
+  // as letters for boundary detection, not just ASCII a-z.
+  function toTitleCaseText(text) {
+    return text
+      .toLowerCase()
+      .replace(/(^|[^\p{L}\p{N}])(\p{L})/gu, (m, sep, letter) => sep + letter.toUpperCase());
+  }
+
+  // Capitalizes the start of the text, and the first letter after ./!/?
+  // followed by whitespace, or after a paragraph break — i.e. "sentence case".
+  function toSentenceCaseText(text) {
+    return text
+      .toLowerCase()
+      .replace(/(^\s*|[.!?]\s+|\n\s*)(\p{L})/gu, (m, sep, letter) => sep + letter.toUpperCase());
+  }
+
+  function applyCaseConversion(transformFn) {
+    const t = STR[lang];
+    const status = $("caseConvertStatus");
+    const before = input.value;
+    if (!before.trim()) {
+      if (status) status.textContent = t.caseConvertEmpty;
+      return;
+    }
+    input.value = transformFn(before);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    if (status) status.textContent = "";
+  }
+
   // Rewrites the editor's own text in place — a deliberate, undoable (Ctrl+Z)
   // edit the user triggers manually, not an automatic/hidden transform.
   // Applies both the numeric-citation fix and the personal pronunciation
@@ -1198,6 +1250,10 @@
   $("scriptSelect").addEventListener("change", () => loadScriptByName($("scriptSelect").value));
   $("scriptName").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); saveScript(); } });
   $("btnAdaptNumbers").addEventListener("click", adaptEditorTextForTts);
+  $("btnCaseUpper").addEventListener("click", () => applyCaseConversion((s) => s.toUpperCase()));
+  $("btnCaseLower").addEventListener("click", () => applyCaseConversion((s) => s.toLowerCase()));
+  $("btnCaseTitle").addEventListener("click", () => applyCaseConversion(toTitleCaseText));
+  $("btnCaseSentence").addEventListener("click", () => applyCaseConversion(toSentenceCaseText));
   $("btnTtsDictAdd").addEventListener("click", addTtsDictionaryEntry);
   ["ttsDictFrom", "ttsDictTo"].forEach(id => {
     $(id).addEventListener("keydown", (e) => {
