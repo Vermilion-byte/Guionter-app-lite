@@ -15,6 +15,7 @@
       subtitle: "Analizador de texto en tiempo real",
       copy: "Copiar",
       clear: "Limpiar",
+      manualLink: "Manual",
       editorHint: "Escribe o pega tu texto abajo. La ortografía se revisa automáticamente mientras escribes.",
       placeholder: "Empieza a escribir o pega tu texto aquí…",
       statsTitle: "Estadísticas",
@@ -128,6 +129,7 @@
       subtitle: "Real-time text analyzer",
       copy: "Copy",
       clear: "Clear",
+      manualLink: "Guide",
       editorHint: "Type or paste your text below. Spelling is checked automatically as you type.",
       placeholder: "Start typing or paste your text here…",
       statsTitle: "Statistics",
@@ -259,6 +261,7 @@
     $("t-subtitle").textContent = t.subtitle;
     $("t-copy").textContent = t.copy;
     $("t-clear").textContent = t.clear;
+    if ($("t-manualLink")) $("t-manualLink").textContent = t.manualLink;
     $("t-editorHint").textContent = t.editorHint;
     input.placeholder = t.placeholder;
     input.lang = lang === "es" ? "es" : "en";
