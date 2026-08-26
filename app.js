@@ -78,6 +78,10 @@
       caseTitleBtn: "Capitalizar Cada Palabra",
       caseSentenceBtn: "Oración",
       caseConvertEmpty: "No hay texto en el editor para convertir.",
+      titleGenTitle: "Generador de títulos",
+      titleGenHint: "Escribe un título y conviértelo al formato que necesites, sin tocar tu guion.",
+      titleGenPlaceholder: "Escribe tu título aquí…",
+      titleGenCopy: "Copiar",
       scriptLibraryTitle: "Mis guiones guardados",
       scriptSelectLabel: "Guion guardado",
       scriptSelectPlaceholder: "— Elige un guion —",
@@ -166,6 +170,10 @@
       caseTitleBtn: "Capitalize Each Word",
       caseSentenceBtn: "Sentence case",
       caseConvertEmpty: "There's no text in the editor to convert.",
+      titleGenTitle: "Title generator",
+      titleGenHint: "Type a title and convert it to the format you need, without touching your script.",
+      titleGenPlaceholder: "Type your title here…",
+      titleGenCopy: "Copy",
       scriptLibraryTitle: "My saved scripts",
       scriptSelectLabel: "Saved script",
       scriptSelectPlaceholder: "— Choose a script —",
@@ -246,6 +254,14 @@
     $("t-caseLowerBtn").textContent = t.caseLowerBtn;
     $("t-caseTitleBtn").textContent = t.caseTitleBtn;
     $("t-caseSentenceBtn").textContent = t.caseSentenceBtn;
+    $("t-titleGenTitle").textContent = t.titleGenTitle;
+    $("t-titleGenHint").textContent = t.titleGenHint;
+    $("titleGenInput").placeholder = t.titleGenPlaceholder;
+    $("t-titleCaseUpperBtn").textContent = t.caseUpperBtn;
+    $("t-titleCaseLowerBtn").textContent = t.caseLowerBtn;
+    $("t-titleCaseTitleBtn").textContent = t.caseTitleBtn;
+    $("t-titleCaseSentenceBtn").textContent = t.caseSentenceBtn;
+    $("t-titleGenCopy").textContent = t.titleGenCopy;
     $("t-scriptLibraryTitle").textContent = t.scriptLibraryTitle;
     $("t-scriptSelectLabel").textContent = t.scriptSelectLabel;
     $("t-scriptNameLabel").textContent = t.scriptNameLabel;
@@ -1120,17 +1136,53 @@
       .replace(/(^\s*|[.!?]\s+|\n\s*)(\p{L})/gu, (m, sep, letter) => sep + letter.toUpperCase());
   }
 
-  function applyCaseConversion(transformFn) {
+  // Generic in-place case conversion for any text field (the main editor, or
+  // the standalone title-generator box below) plus its own status hint.
+  // If the user has a text selection in the field, only that selected range
+  // is converted; with no selection, the whole field is converted instead.
+  //
+  // This inserts the converted text via execCommand("insertText") — the same
+  // path the browser uses for real typing — instead of bulk-replacing
+  // el.value. That keeps two things working exactly like everywhere else on
+  // the page: the field's native undo stack (Ctrl+Z undoes just this one
+  // conversion, like in any app) and its scroll position (bulk-replacing
+  // el.value resets the field's internal scroll to the top, which is what
+  // was causing the view to jump after converting a selection lower down).
+  function applyCaseConversionTo(el, transformFn, statusEl) {
     const t = STR[lang];
-    const status = $("caseConvertStatus");
-    const before = input.value;
-    if (!before.trim()) {
-      if (status) status.textContent = t.caseConvertEmpty;
+    const full = el.value;
+    if (!full.trim()) {
+      if (statusEl) statusEl.textContent = t.caseConvertEmpty;
       return;
     }
-    input.value = transformFn(before);
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    if (status) status.textContent = "";
+    const selStart = el.selectionStart;
+    const selEnd = el.selectionEnd;
+    const hasSelection = typeof selStart === "number" && typeof selEnd === "number" && selEnd > selStart;
+    const rangeStart = hasSelection ? selStart : 0;
+    const rangeEnd = hasSelection ? selEnd : full.length;
+    const converted = transformFn(full.slice(rangeStart, rangeEnd));
+
+    el.focus({ preventScroll: true });
+    el.setSelectionRange(rangeStart, rangeEnd);
+
+    let usedExecCommand = false;
+    try {
+      usedExecCommand = !!(document.execCommand && document.execCommand("insertText", false, converted));
+    } catch (e) { usedExecCommand = false; }
+
+    if (!usedExecCommand) {
+      // Fallback for browsers without execCommand support: no native undo
+      // entry, but the conversion itself still works.
+      el.value = full.slice(0, rangeStart) + converted + full.slice(rangeEnd);
+      el.setSelectionRange(rangeStart, rangeStart + converted.length);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    if (statusEl) statusEl.textContent = "";
+  }
+
+  function applyCaseConversion(transformFn) {
+    applyCaseConversionTo(input, transformFn, $("caseConvertStatus"));
   }
 
   // Rewrites the editor's own text in place — a deliberate, undoable (Ctrl+Z)
@@ -1254,6 +1306,22 @@
   $("btnCaseLower").addEventListener("click", () => applyCaseConversion((s) => s.toLowerCase()));
   $("btnCaseTitle").addEventListener("click", () => applyCaseConversion(toTitleCaseText));
   $("btnCaseSentence").addEventListener("click", () => applyCaseConversion(toSentenceCaseText));
+
+  // Title generator: same conversions, applied only to its own standalone box.
+  const titleGenInput = $("titleGenInput");
+  $("btnTitleCaseUpper").addEventListener("click", () => applyCaseConversionTo(titleGenInput, (s) => s.toUpperCase()));
+  $("btnTitleCaseLower").addEventListener("click", () => applyCaseConversionTo(titleGenInput, (s) => s.toLowerCase()));
+  $("btnTitleCaseTitle").addEventListener("click", () => applyCaseConversionTo(titleGenInput, toTitleCaseText));
+  $("btnTitleCaseSentence").addEventListener("click", () => applyCaseConversionTo(titleGenInput, toSentenceCaseText));
+  $("btnTitleGenCopy").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(titleGenInput.value);
+      const btn = $("btnTitleGenCopy");
+      const original = btn.querySelector("span").textContent;
+      btn.querySelector("span").textContent = STR[lang].copied;
+      setTimeout(() => { btn.querySelector("span").textContent = original; }, 1200);
+    } catch (e) { /* clipboard unavailable, ignore */ }
+  });
   $("btnTtsDictAdd").addEventListener("click", addTtsDictionaryEntry);
   ["ttsDictFrom", "ttsDictTo"].forEach(id => {
     $(id).addEventListener("keydown", (e) => {

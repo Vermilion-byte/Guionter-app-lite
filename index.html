@@ -285,6 +285,10 @@
   }
   .status-line.ok{color:var(--good);font-weight:700;}
   .status-line.err{color:var(--bad);font-weight:700;}
+  .title-gen-input{
+    width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--surface-alt);
+    color:var(--text);padding:8px 10px;border-radius:8px;font-size:13px;font-family:var(--font);margin-bottom:10px;
+  }
   .footer-note{
     margin-top:26px;font-size:12px;color:var(--text-dim);text-align:center;line-height:1.6;
   }
@@ -385,6 +389,20 @@
 
     <!-- Stats -->
     <section style="display:flex;flex-direction:column;gap:14px;">
+      <!-- Title case-conversion tool: standalone box, independent of the main editor -->
+      <div class="card">
+        <p class="section-title" id="t-titleGenTitle">Generador de títulos</p>
+        <p class="hint" id="t-titleGenHint" style="margin:0 0 10px;">Escribe un título y conviértelo al formato que necesites, sin tocar tu guion.</p>
+        <input type="text" id="titleGenInput" class="title-gen-input" placeholder="Escribe tu título aquí…">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <button class="btn" id="btnTitleCaseUpper" type="button">🔠 <span id="t-titleCaseUpperBtn">MAYÚSCULAS</span></button>
+          <button class="btn" id="btnTitleCaseLower" type="button">🔡 <span id="t-titleCaseLowerBtn">minúsculas</span></button>
+          <button class="btn" id="btnTitleCaseTitle" type="button">🔤 <span id="t-titleCaseTitleBtn">Capitalizar Cada Palabra</span></button>
+          <button class="btn" id="btnTitleCaseSentence" type="button">📝 <span id="t-titleCaseSentenceBtn">Oración</span></button>
+          <button class="btn" id="btnTitleGenCopy" type="button">📋 <span id="t-titleGenCopy">Copiar</span></button>
+        </div>
+      </div>
+
       <div class="card">
         <p class="section-title" id="t-statsTitle">Estadísticas</p>
         <div class="stats-grid">
