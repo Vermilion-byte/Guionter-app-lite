@@ -82,6 +82,27 @@
       titleGenHint: "Escribe un título y conviértelo al formato que necesites, sin tocar tu guion.",
       titleGenPlaceholder: "Escribe tu título aquí…",
       titleGenCopy: "Copiar",
+      findReplaceTitle: "Buscar y reemplazar",
+      findLabel: "Buscar",
+      replaceLabel: "Reemplazar con",
+      findNext: "Buscar siguiente",
+      replaceOne: "Reemplazar",
+      replaceAll: "Reemplazar todos",
+      findEmptyQuery: "Escribe qué quieres buscar.",
+      findNoMatches: (q) => `No se encontró "${q}" en el texto.`,
+      findMatchStatus: (i, n) => `Coincidencia ${i} de ${n}.`,
+      findReplacedAll: (n) => `Se reemplazaron ${n} coincidencia${n === 1 ? "" : "s"}.`,
+      goalTitle: "Meta del guion",
+      goalUnitLabel: "Medir en",
+      goalUnitWords: "Palabras",
+      goalUnitDuration: "Duración hablada",
+      goalWordsLabel: "Meta de palabras",
+      goalDurationLabel: "Meta (min:seg)",
+      goalNoTarget: "Define una meta arriba para ver tu progreso.",
+      goalUnderWords: (cur, tgt, diff) => `${cur} de ${tgt} palabras — te faltan ${diff}.`,
+      goalOverWords: (cur, tgt, diff) => `${cur} de ${tgt} palabras — ${diff} por encima de la meta.`,
+      goalUnderDuration: (cur, tgt, diff) => `${cur} de ${tgt} — te faltan ${diff}.`,
+      goalOverDuration: (cur, tgt, diff) => `${cur} de ${tgt} — ${diff} por encima de la meta.`,
       scriptLibraryTitle: "Mis guiones guardados",
       scriptSelectLabel: "Guion guardado",
       scriptSelectPlaceholder: "— Elige un guion —",
@@ -174,6 +195,27 @@
       titleGenHint: "Type a title and convert it to the format you need, without touching your script.",
       titleGenPlaceholder: "Type your title here…",
       titleGenCopy: "Copy",
+      findReplaceTitle: "Find and replace",
+      findLabel: "Find",
+      replaceLabel: "Replace with",
+      findNext: "Find next",
+      replaceOne: "Replace",
+      replaceAll: "Replace all",
+      findEmptyQuery: "Type something to search for.",
+      findNoMatches: (q) => `"${q}" was not found in the text.`,
+      findMatchStatus: (i, n) => `Match ${i} of ${n}.`,
+      findReplacedAll: (n) => `Replaced ${n} match${n === 1 ? "" : "es"}.`,
+      goalTitle: "Script goal",
+      goalUnitLabel: "Measure in",
+      goalUnitWords: "Words",
+      goalUnitDuration: "Spoken duration",
+      goalWordsLabel: "Word target",
+      goalDurationLabel: "Target (min:sec)",
+      goalNoTarget: "Set a target above to see your progress.",
+      goalUnderWords: (cur, tgt, diff) => `${cur} of ${tgt} words — ${diff} to go.`,
+      goalOverWords: (cur, tgt, diff) => `${cur} of ${tgt} words — ${diff} over the target.`,
+      goalUnderDuration: (cur, tgt, diff) => `${cur} of ${tgt} — ${diff} to go.`,
+      goalOverDuration: (cur, tgt, diff) => `${cur} of ${tgt} — ${diff} over the target.`,
       scriptLibraryTitle: "My saved scripts",
       scriptSelectLabel: "Saved script",
       scriptSelectPlaceholder: "— Choose a script —",
@@ -262,6 +304,18 @@
     $("t-titleCaseTitleBtn").textContent = t.caseTitleBtn;
     $("t-titleCaseSentenceBtn").textContent = t.caseSentenceBtn;
     $("t-titleGenCopy").textContent = t.titleGenCopy;
+    $("t-findReplaceTitle").textContent = t.findReplaceTitle;
+    $("t-findLabel").textContent = t.findLabel;
+    $("t-replaceLabel").textContent = t.replaceLabel;
+    $("t-findNext").textContent = t.findNext;
+    $("t-replaceOne").textContent = t.replaceOne;
+    $("t-replaceAll").textContent = t.replaceAll;
+    $("t-goalTitle").textContent = t.goalTitle;
+    $("t-goalUnitLabel").textContent = t.goalUnitLabel;
+    $("t-goalUnitWords").textContent = t.goalUnitWords;
+    $("t-goalUnitDuration").textContent = t.goalUnitDuration;
+    $("t-goalWordsLabel").textContent = t.goalWordsLabel;
+    $("t-goalDurationLabel").textContent = t.goalDurationLabel;
     $("t-scriptLibraryTitle").textContent = t.scriptLibraryTitle;
     $("t-scriptSelectLabel").textContent = t.scriptSelectLabel;
     $("t-scriptNameLabel").textContent = t.scriptNameLabel;
@@ -424,6 +478,7 @@
       : "";
 
     renderKeywordTable();
+    updateGoalProgress(r);
   }
 
   // ---------------------------------------------------------------------
@@ -1185,6 +1240,169 @@
     applyCaseConversionTo(input, transformFn, $("caseConvertStatus"));
   }
 
+  // ---------------------------------------------------------------------
+  // Buscar y reemplazar — a real find/replace over the main editor's text.
+  // Case-insensitive, plain-text (no regex). Replacements go through
+  // execCommand("insertText") too, so they stay undoable with Ctrl+Z and
+  // don't reset the editor's scroll position (same reasoning as the case
+  // conversion tools above).
+  // ---------------------------------------------------------------------
+
+  function findAllMatches(text, query) {
+    if (!query) return [];
+    const lowerText = text.toLowerCase();
+    const lowerQuery = query.toLowerCase();
+    const matches = [];
+    let idx = 0;
+    while (true) {
+      const found = lowerText.indexOf(lowerQuery, idx);
+      if (found === -1) break;
+      matches.push(found);
+      idx = found + lowerQuery.length;
+    }
+    return matches;
+  }
+
+  function findNextInEditor() {
+    const t = STR[lang];
+    const status = $("findStatus");
+    const query = $("findInput").value;
+    if (!query) { status.textContent = t.findEmptyQuery; return null; }
+    const text = input.value;
+    const matches = findAllMatches(text, query);
+    if (!matches.length) { status.textContent = t.findNoMatches(query); return null; }
+    const cursor = input.selectionEnd || 0;
+    let match = matches.find(m => m >= cursor);
+    if (match === undefined) match = matches[0]; // wrap around to the start
+    input.focus();
+    input.setSelectionRange(match, match + query.length);
+    status.textContent = t.findMatchStatus(matches.indexOf(match) + 1, matches.length);
+    return { match, query };
+  }
+
+  function replaceOneInEditor() {
+    const t = STR[lang];
+    const query = $("findInput").value;
+    const replacement = $("replaceInput").value;
+    if (!query) { $("findStatus").textContent = t.findEmptyQuery; return; }
+    const selStart = input.selectionStart;
+    const selEnd = input.selectionEnd;
+    const selectedText = input.value.slice(selStart, selEnd);
+    if (selEnd > selStart && selectedText.toLowerCase() === query.toLowerCase()) {
+      input.focus();
+      input.setSelectionRange(selStart, selEnd);
+      const ok = document.execCommand && document.execCommand("insertText", false, replacement);
+      if (!ok) {
+        input.value = input.value.slice(0, selStart) + replacement + input.value.slice(selEnd);
+        input.setSelectionRange(selStart, selStart + replacement.length);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    }
+    findNextInEditor();
+  }
+
+  function replaceAllInEditor() {
+    const t = STR[lang];
+    const status = $("findStatus");
+    const query = $("findInput").value;
+    const replacement = $("replaceInput").value;
+    if (!query) { status.textContent = t.findEmptyQuery; return; }
+    const text = input.value;
+    const matches = findAllMatches(text, query);
+    if (!matches.length) { status.textContent = t.findNoMatches(query); return; }
+    let result = "";
+    let lastIndex = 0;
+    matches.forEach(m => {
+      result += text.slice(lastIndex, m) + replacement;
+      lastIndex = m + query.length;
+    });
+    result += text.slice(lastIndex);
+
+    input.focus();
+    input.setSelectionRange(0, text.length);
+    const ok = document.execCommand && document.execCommand("insertText", false, result);
+    if (!ok) {
+      input.value = result;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    status.textContent = t.findReplacedAll(matches.length);
+  }
+
+  // ---------------------------------------------------------------------
+  // Meta del guion — an optional target (in words or spoken duration) with
+  // a live progress bar, updated on every recompute(). Persisted so it
+  // survives a reload, same pattern as the other localStorage-backed tools.
+  // ---------------------------------------------------------------------
+
+  const GOAL_KEY = "guionter-goal";
+
+  function loadGoal() {
+    try {
+      const raw = localStorage.getItem(GOAL_KEY);
+      if (!raw) return { unit: "words", words: null, seconds: null };
+      const parsed = JSON.parse(raw);
+      return {
+        unit: parsed.unit === "duration" ? "duration" : "words",
+        words: typeof parsed.words === "number" && parsed.words > 0 ? parsed.words : null,
+        seconds: typeof parsed.seconds === "number" && parsed.seconds > 0 ? parsed.seconds : null
+      };
+    } catch (e) { return { unit: "words", words: null, seconds: null }; }
+  }
+
+  let goalSettings = loadGoal();
+
+  function saveGoal() {
+    try { localStorage.setItem(GOAL_KEY, JSON.stringify(goalSettings)); } catch (e) { /* storage unavailable, ignore */ }
+  }
+
+  function parseDurationToSeconds(str) {
+    const m = String(str || "").trim().match(/^(\d+):([0-5]?\d)$/);
+    if (!m) return null;
+    return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+  }
+
+  function formatSecondsToMMSS(totalSeconds) {
+    const s = Math.max(0, Math.round(totalSeconds));
+    const mm = Math.floor(s / 60);
+    const ss = s % 60;
+    return `${mm}:${String(ss).padStart(2, "0")}`;
+  }
+
+  function updateGoalFieldsVisibility() {
+    const isDuration = goalSettings.unit === "duration";
+    $("goalWordsField").style.display = isDuration ? "none" : "flex";
+    $("goalDurationField").style.display = isDuration ? "flex" : "none";
+  }
+
+  function updateGoalProgress(r) {
+    const t = STR[lang];
+    const fill = $("goalProgressFill");
+    const status = $("goalStatus");
+    const isDuration = goalSettings.unit === "duration";
+    const target = isDuration ? goalSettings.seconds : goalSettings.words;
+    if (!target) {
+      fill.style.width = "0%";
+      fill.classList.remove("over");
+      status.textContent = t.goalNoTarget;
+      return;
+    }
+    const current = isDuration ? r.speakSeconds : r.wordCount;
+    const pct = (current / target) * 100;
+    fill.style.width = `${Math.min(100, pct)}%`;
+    const over = current > target;
+    fill.classList.toggle("over", over);
+    const diff = Math.abs(current - target);
+    if (isDuration) {
+      status.textContent = over
+        ? t.goalOverDuration(formatSecondsToMMSS(current), formatSecondsToMMSS(target), formatSecondsToMMSS(diff))
+        : t.goalUnderDuration(formatSecondsToMMSS(current), formatSecondsToMMSS(target), formatSecondsToMMSS(diff));
+    } else {
+      status.textContent = over
+        ? t.goalOverWords(current, target, diff)
+        : t.goalUnderWords(current, target, diff);
+    }
+  }
+
   // Rewrites the editor's own text in place — a deliberate, undoable (Ctrl+Z)
   // edit the user triggers manually, not an automatic/hidden transform.
   // Applies both the numeric-citation fix and the personal pronunciation
@@ -1322,6 +1540,83 @@
       setTimeout(() => { btn.querySelector("span").textContent = original; }, 1200);
     } catch (e) { /* clipboard unavailable, ignore */ }
   });
+
+  // Buscar y reemplazar
+  $("btnFindNext").addEventListener("click", findNextInEditor);
+  $("btnReplaceOne").addEventListener("click", replaceOneInEditor);
+  $("btnReplaceAll").addEventListener("click", replaceAllInEditor);
+  $("findInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); findNextInEditor(); }
+  });
+
+  // Meta del guion (goal tracker)
+  $("goalUnit").value = goalSettings.unit;
+  if (goalSettings.words) $("goalWordsInput").value = goalSettings.words;
+  if (goalSettings.seconds) $("goalDurationInput").value = formatSecondsToMMSS(goalSettings.seconds);
+  updateGoalFieldsVisibility();
+  $("goalUnit").addEventListener("change", (e) => {
+    goalSettings.unit = e.target.value === "duration" ? "duration" : "words";
+    saveGoal();
+    updateGoalFieldsVisibility();
+    recompute();
+  });
+  $("goalWordsInput").addEventListener("input", (e) => {
+    const v = parseInt(e.target.value, 10);
+    goalSettings.words = Number.isFinite(v) && v > 0 ? v : null;
+    saveGoal();
+    recompute();
+  });
+  $("goalDurationInput").addEventListener("input", (e) => {
+    goalSettings.seconds = parseDurationToSeconds(e.target.value);
+    saveGoal();
+    recompute();
+  });
+
+  // Atajos de teclado (Ctrl+Alt+letra) para las herramientas ya existentes.
+  // Guarded against AltGraph so international keyboard layouts that use
+  // AltGr (reported by the browser as Ctrl+Alt) to type accented/special
+  // characters keep working normally.
+  document.addEventListener("keydown", (e) => {
+    if (!e.ctrlKey || !e.altKey) return;
+    if (e.getModifierState && e.getModifierState("AltGraph")) return;
+    const activeEl = document.activeElement;
+    const targetField = activeEl === titleGenInput ? titleGenInput : input;
+    const statusEl = targetField === input ? $("caseConvertStatus") : null;
+    switch (e.key.toLowerCase()) {
+      case "u":
+        e.preventDefault();
+        applyCaseConversionTo(targetField, (s) => s.toUpperCase(), statusEl);
+        break;
+      case "l":
+        e.preventDefault();
+        applyCaseConversionTo(targetField, (s) => s.toLowerCase(), statusEl);
+        break;
+      case "t":
+        e.preventDefault();
+        applyCaseConversionTo(targetField, toTitleCaseText, statusEl);
+        break;
+      case "s":
+        e.preventDefault();
+        applyCaseConversionTo(targetField, toSentenceCaseText, statusEl);
+        break;
+      case "a":
+        e.preventDefault();
+        adaptEditorTextForTts();
+        break;
+      case "c":
+        e.preventDefault();
+        $("btnCopy").click();
+        break;
+      case "f":
+        e.preventDefault();
+        $("findReplace").open = true;
+        $("findInput").focus();
+        break;
+      default:
+        break;
+    }
+  });
+
   $("btnTtsDictAdd").addEventListener("click", addTtsDictionaryEntry);
   ["ttsDictFrom", "ttsDictTo"].forEach(id => {
     $(id).addEventListener("keydown", (e) => {

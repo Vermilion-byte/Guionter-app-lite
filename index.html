@@ -285,6 +285,9 @@
   }
   .status-line.ok{color:var(--good);font-weight:700;}
   .status-line.err{color:var(--bad);font-weight:700;}
+  .goal-progress-track{width:100%;height:10px;border-radius:6px;background:var(--surface-alt);border:1px solid var(--border);overflow:hidden;}
+  .goal-progress-fill{height:100%;width:0%;background:var(--accent);transition:width .25s ease, background-color .2s ease;}
+  .goal-progress-fill.over{background:var(--bad);}
   .title-gen-input{
     width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--surface-alt);
     color:var(--text);padding:8px 10px;border-radius:8px;font-size:13px;font-family:var(--font);margin-bottom:10px;
@@ -319,7 +322,7 @@
         <option value="en">English</option>
       </select>
       <button class="btn" id="btnTheme" type="button">🌓</button>
-      <button class="btn" id="btnCopy" type="button"><span id="t-copy">Copiar</span></button>
+      <button class="btn" id="btnCopy" type="button" title="Ctrl+Alt+C"><span id="t-copy">Copiar</span></button>
       <button class="btn" id="btnClear" type="button"><span id="t-clear">Limpiar</span></button>
       <span class="toolbar-divider"></span>
       <button class="btn" id="btnWord" type="button">📄 <span id="t-downloadWord">Word</span></button>
@@ -338,17 +341,17 @@
       <div class="editor-toolbar">
         <span class="hint" id="t-editorHint">Escribe o pega tu texto abajo. La ortografía se revisa automáticamente mientras escribes.</span>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <button class="btn" id="btnAdaptNumbers" type="button">🔢 <span id="t-adaptNumbersBtn">Adaptar texto para TTS</span></button>
+          <button class="btn" id="btnAdaptNumbers" type="button" title="Ctrl+Alt+A">🔢 <span id="t-adaptNumbersBtn">Adaptar texto para TTS</span></button>
           <span class="hint" id="adaptNumbersStatus"></span>
         </div>
       </div>
       <div class="editor-toolbar" style="border-top:1px solid var(--border);">
         <span class="hint" id="t-caseConvertHint">Convertir el texto a:</span>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <button class="btn" id="btnCaseUpper" type="button">🔠 <span id="t-caseUpperBtn">MAYÚSCULAS</span></button>
-          <button class="btn" id="btnCaseLower" type="button">🔡 <span id="t-caseLowerBtn">minúsculas</span></button>
-          <button class="btn" id="btnCaseTitle" type="button">🔤 <span id="t-caseTitleBtn">Capitalizar Cada Palabra</span></button>
-          <button class="btn" id="btnCaseSentence" type="button">📝 <span id="t-caseSentenceBtn">Oración</span></button>
+          <button class="btn" id="btnCaseUpper" type="button" title="Ctrl+Alt+U">🔠 <span id="t-caseUpperBtn">MAYÚSCULAS</span></button>
+          <button class="btn" id="btnCaseLower" type="button" title="Ctrl+Alt+L">🔡 <span id="t-caseLowerBtn">minúsculas</span></button>
+          <button class="btn" id="btnCaseTitle" type="button" title="Ctrl+Alt+T">🔤 <span id="t-caseTitleBtn">Capitalizar Cada Palabra</span></button>
+          <button class="btn" id="btnCaseSentence" type="button" title="Ctrl+Alt+S">📝 <span id="t-caseSentenceBtn">Oración</span></button>
           <span class="hint" id="caseConvertStatus"></span>
         </div>
       </div>
@@ -384,6 +387,23 @@
         <div id="ttsDictList"></div>
         <p class="empty-hint" id="t-ttsDictEmpty" style="display:none;margin:8px 0 0;">Aún no tienes reemplazos guardados.</p>
       </details>
+      <details id="findReplace">
+        <summary id="t-findReplaceTitle">Buscar y reemplazar</summary>
+        <div class="tts-dict-row" style="margin-top:10px;align-items:flex-end;">
+          <label class="tts-dict-field">
+            <span id="t-findLabel">Buscar</span>
+            <input type="text" id="findInput">
+          </label>
+          <label class="tts-dict-field">
+            <span id="t-replaceLabel">Reemplazar con</span>
+            <input type="text" id="replaceInput">
+          </label>
+          <button class="btn" id="btnFindNext" type="button" title="Ctrl+Alt+F">🔍 <span id="t-findNext">Buscar siguiente</span></button>
+          <button class="btn" id="btnReplaceOne" type="button"><span id="t-replaceOne">Reemplazar</span></button>
+          <button class="btn" id="btnReplaceAll" type="button"><span id="t-replaceAll">Reemplazar todos</span></button>
+        </div>
+        <div class="status-line" id="findStatus"></div>
+      </details>
       <textarea id="input" spellcheck="true" lang="es" placeholder="Empieza a escribir o pega tu texto aquí…"></textarea>
     </section>
 
@@ -395,10 +415,10 @@
         <p class="hint" id="t-titleGenHint" style="margin:0 0 10px;">Escribe un título y conviértelo al formato que necesites, sin tocar tu guion.</p>
         <input type="text" id="titleGenInput" class="title-gen-input" placeholder="Escribe tu título aquí…">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <button class="btn" id="btnTitleCaseUpper" type="button">🔠 <span id="t-titleCaseUpperBtn">MAYÚSCULAS</span></button>
-          <button class="btn" id="btnTitleCaseLower" type="button">🔡 <span id="t-titleCaseLowerBtn">minúsculas</span></button>
-          <button class="btn" id="btnTitleCaseTitle" type="button">🔤 <span id="t-titleCaseTitleBtn">Capitalizar Cada Palabra</span></button>
-          <button class="btn" id="btnTitleCaseSentence" type="button">📝 <span id="t-titleCaseSentenceBtn">Oración</span></button>
+          <button class="btn" id="btnTitleCaseUpper" type="button" title="Ctrl+Alt+U">🔠 <span id="t-titleCaseUpperBtn">MAYÚSCULAS</span></button>
+          <button class="btn" id="btnTitleCaseLower" type="button" title="Ctrl+Alt+L">🔡 <span id="t-titleCaseLowerBtn">minúsculas</span></button>
+          <button class="btn" id="btnTitleCaseTitle" type="button" title="Ctrl+Alt+T">🔤 <span id="t-titleCaseTitleBtn">Capitalizar Cada Palabra</span></button>
+          <button class="btn" id="btnTitleCaseSentence" type="button" title="Ctrl+Alt+S">📝 <span id="t-titleCaseSentenceBtn">Oración</span></button>
           <button class="btn" id="btnTitleGenCopy" type="button">📋 <span id="t-titleGenCopy">Copiar</span></button>
         </div>
       </div>
@@ -414,6 +434,30 @@
           <div class="stat"><div class="val" id="statReadTime">0 s</div><div class="lbl" id="t-readTime">Tiempo de lectura</div></div>
           <div class="stat"><div class="val" id="statSpeakTime">0 s</div><div class="lbl" id="t-speakTime">Tiempo de habla</div></div>
         </div>
+      </div>
+
+      <!-- Goal tracker: a target (words or spoken duration) with a live progress bar -->
+      <div class="card">
+        <p class="section-title" id="t-goalTitle">Meta del guion</p>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px;">
+          <label class="tts-dict-field" style="flex:1 1 140px;min-width:130px;">
+            <span id="t-goalUnitLabel">Medir en</span>
+            <select id="goalUnit">
+              <option value="words" id="t-goalUnitWords">Palabras</option>
+              <option value="duration" id="t-goalUnitDuration">Duración hablada</option>
+            </select>
+          </label>
+          <label class="tts-dict-field" id="goalWordsField" style="flex:1 1 140px;min-width:130px;">
+            <span id="t-goalWordsLabel">Meta de palabras</span>
+            <input type="number" id="goalWordsInput" min="0" placeholder="Ej: 600">
+          </label>
+          <label class="tts-dict-field" id="goalDurationField" style="flex:1 1 140px;min-width:130px;display:none;">
+            <span id="t-goalDurationLabel">Meta (min:seg)</span>
+            <input type="text" id="goalDurationInput" placeholder="Ej: 5:00">
+          </label>
+        </div>
+        <div class="goal-progress-track"><div class="goal-progress-fill" id="goalProgressFill"></div></div>
+        <p class="status-line" id="goalStatus" style="margin-top:8px;"></p>
       </div>
 
       <div class="card">
