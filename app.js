@@ -73,6 +73,15 @@
       adaptNumbersBtn: "Adaptar texto para TTS",
       adaptNumbersNone: "No se encontró nada que adaptar (ni citas numéricas ni palabras de tu diccionario).",
       adaptNumbersDone: (n) => `${n} cambio${n === 1 ? "" : "s"} aplicado${n === 1 ? "" : "s"} al texto — revisa antes de generar el audio.`,
+      adaptAiScopeLabel: "Alcance",
+      adaptAiScopeCitations: "Solo citas",
+      adaptAiScopeCitationsPlus: "Citas + limpieza general",
+      adaptAiBtn: "Adaptar citas con IA",
+      adaptAiEmpty: "No hay texto en el editor para adaptar.",
+      adaptAiNoKey: "Ingresa tu clave de API del proveedor elegido (en la tarjeta de límite de caracteres) para usar esta función.",
+      adaptAiWorking: "Adaptando citas con IA…",
+      adaptAiDone: "Listo — revisa el resultado antes de generar el audio.",
+      adaptAiError: (msg) => `No se pudo adaptar el texto con IA: ${msg}`,
       caseConvertHint: "Convertir el texto a:",
       caseUpperBtn: "MAYÚSCULAS",
       caseLowerBtn: "minúsculas",
@@ -93,6 +102,29 @@
       findNoMatches: (q) => `No se encontró "${q}" en el texto.`,
       findMatchStatus: (i, n) => `Coincidencia ${i} de ${n}.`,
       findReplacedAll: (n) => `Se reemplazaron ${n} coincidencia${n === 1 ? "" : "s"}.`,
+      charLimitTitle: "Ajustar a un límite de caracteres",
+      charLimitHint: "Escribe el máximo de caracteres permitido y elige cómo quieres llegar a él.",
+      charLimitModeLabel: "Modo",
+      charLimitModeTrim: "Recortar (desde el final)",
+      charLimitModeLocal: "Resumen inteligente (sin conexión)",
+      charLimitModeAi: "Resumen con IA (en línea)",
+      charLimitLabel: "Límite de caracteres",
+      charLimitPlaceholder: "Ej: 280",
+      charLimitApply: "Aplicar",
+      charLimitEmpty: "No hay texto en el editor para ajustar.",
+      charLimitInvalid: "Ingresa un límite de caracteres válido (mayor a 0).",
+      charLimitFits: (count, limit) => `Tu texto ya tiene ${count} caracteres, dentro del límite de ${limit}. No se modificó nada.`,
+      charLimitDone: (before, after, limit) => `Se recortó de ${before} a ${after} caracteres (límite: ${limit}).`,
+      charLimitLocalDone: (kept, total, chars, limit) => `Resumen local: se conservaron ${kept} de ${total} oraciones (${chars} de un límite de ${limit} caracteres).`,
+      charLimitAiProviderLabel: "Proveedor de IA",
+      charLimitAiProviderAnthropic: "Claude (Anthropic)",
+      charLimitAiProviderOpenai: "ChatGPT (OpenAI)",
+      charLimitAiProviderDeepseek: "DeepSeek",
+      charLimitAiKeyLabel: "Tu clave de API (se guarda solo en este navegador)",
+      charLimitAiNoKey: "Ingresa tu clave de API del proveedor elegido para usar el resumen con IA.",
+      charLimitAiWorking: "Generando resumen con IA…",
+      charLimitAiDone: (before, after, limit) => `Resumen con IA: de ${before} a ${after} caracteres (límite: ${limit}).`,
+      charLimitAiError: (msg) => `No se pudo generar el resumen con IA: ${msg}`,
       goalTitle: "Meta del guion",
       goalUnitLabel: "Medir en",
       goalUnitWords: "Palabras",
@@ -187,6 +219,15 @@
       adaptNumbersBtn: "Adapt text for TTS",
       adaptNumbersNone: "Nothing to adapt was found (no numeric citations or dictionary words).",
       adaptNumbersDone: (n) => `${n} change${n === 1 ? "" : "s"} applied to the text — check it before generating audio.`,
+      adaptAiScopeLabel: "Scope",
+      adaptAiScopeCitations: "Citations only",
+      adaptAiScopeCitationsPlus: "Citations + general cleanup",
+      adaptAiBtn: "Adapt citations with AI",
+      adaptAiEmpty: "There's no text in the editor to adapt.",
+      adaptAiNoKey: "Enter your API key for the chosen provider (in the character-limit card) to use this feature.",
+      adaptAiWorking: "Adapting citations with AI…",
+      adaptAiDone: "Done — review the result before generating audio.",
+      adaptAiError: (msg) => `Couldn't adapt the text with AI: ${msg}`,
       caseConvertHint: "Convert the text to:",
       caseUpperBtn: "UPPERCASE",
       caseLowerBtn: "lowercase",
@@ -207,6 +248,29 @@
       findNoMatches: (q) => `"${q}" was not found in the text.`,
       findMatchStatus: (i, n) => `Match ${i} of ${n}.`,
       findReplacedAll: (n) => `Replaced ${n} match${n === 1 ? "" : "es"}.`,
+      charLimitTitle: "Fit to a character limit",
+      charLimitHint: "Enter the maximum number of characters allowed and choose how you want to get there.",
+      charLimitModeLabel: "Mode",
+      charLimitModeTrim: "Trim (from the end)",
+      charLimitModeLocal: "Smart summary (offline)",
+      charLimitModeAi: "AI summary (online)",
+      charLimitLabel: "Character limit",
+      charLimitPlaceholder: "E.g. 280",
+      charLimitApply: "Apply",
+      charLimitEmpty: "There's no text in the editor to adjust.",
+      charLimitInvalid: "Enter a valid character limit (greater than 0).",
+      charLimitFits: (count, limit) => `Your text already has ${count} characters, within the ${limit} limit. Nothing was changed.`,
+      charLimitDone: (before, after, limit) => `Trimmed from ${before} to ${after} characters (limit: ${limit}).`,
+      charLimitLocalDone: (kept, total, chars, limit) => `Local summary: kept ${kept} of ${total} sentences (${chars} of a ${limit}-character limit).`,
+      charLimitAiProviderLabel: "AI provider",
+      charLimitAiProviderAnthropic: "Claude (Anthropic)",
+      charLimitAiProviderOpenai: "ChatGPT (OpenAI)",
+      charLimitAiProviderDeepseek: "DeepSeek",
+      charLimitAiKeyLabel: "Your API key (stored only in this browser)",
+      charLimitAiNoKey: "Enter your API key for the selected provider to use the AI summary.",
+      charLimitAiWorking: "Generating AI summary…",
+      charLimitAiDone: (before, after, limit) => `AI summary: from ${before} to ${after} characters (limit: ${limit}).`,
+      charLimitAiError: (msg) => `Couldn't generate the AI summary: ${msg}`,
       goalTitle: "Script goal",
       goalUnitLabel: "Measure in",
       goalUnitWords: "Words",
@@ -294,6 +358,10 @@
     $("t-importConfig").textContent = t.importConfig;
     $("btnImportConfig").title = t.importConfigTitle;
     $("t-adaptNumbersBtn").textContent = t.adaptNumbersBtn;
+    $("t-adaptAiScopeLabel").textContent = t.adaptAiScopeLabel;
+    $("t-adaptAiScopeCitations").textContent = t.adaptAiScopeCitations;
+    $("t-adaptAiScopeCitationsPlus").textContent = t.adaptAiScopeCitationsPlus;
+    $("t-adaptAiBtn").textContent = t.adaptAiBtn;
     $("t-caseConvertHint").textContent = t.caseConvertHint;
     $("t-caseUpperBtn").textContent = t.caseUpperBtn;
     $("t-caseLowerBtn").textContent = t.caseLowerBtn;
@@ -313,6 +381,20 @@
     $("t-findNext").textContent = t.findNext;
     $("t-replaceOne").textContent = t.replaceOne;
     $("t-replaceAll").textContent = t.replaceAll;
+    $("t-charLimitTitle").textContent = t.charLimitTitle;
+    $("t-charLimitHint").textContent = t.charLimitHint;
+    $("t-charLimitModeLabel").textContent = t.charLimitModeLabel;
+    $("t-charLimitModeTrim").textContent = t.charLimitModeTrim;
+    $("t-charLimitModeLocal").textContent = t.charLimitModeLocal;
+    $("t-charLimitModeAi").textContent = t.charLimitModeAi;
+    $("t-charLimitLabel").textContent = t.charLimitLabel;
+    $("t-charLimitApply").textContent = t.charLimitApply;
+    $("charLimitInput").placeholder = t.charLimitPlaceholder;
+    $("t-charLimitAiProviderLabel").textContent = t.charLimitAiProviderLabel;
+    $("t-charLimitAiProviderAnthropic").textContent = t.charLimitAiProviderAnthropic;
+    $("t-charLimitAiProviderOpenai").textContent = t.charLimitAiProviderOpenai;
+    $("t-charLimitAiProviderDeepseek").textContent = t.charLimitAiProviderDeepseek;
+    $("t-charLimitAiKeyLabel").textContent = t.charLimitAiKeyLabel;
     $("t-goalTitle").textContent = t.goalTitle;
     $("t-goalUnitLabel").textContent = t.goalUnitLabel;
     $("t-goalUnitWords").textContent = t.goalUnitWords;
@@ -1244,6 +1326,432 @@
   }
 
   // ---------------------------------------------------------------------
+  // Ajustar a un límite de caracteres — three ways to bring the editor's
+  // text under a target character count (counting spaces, same as the
+  // "Caracteres con espacios" stat): a plain trim from the end, a fully
+  // offline extractive summary that pulls sentences from across the whole
+  // text, or a real AI-generated summary via the user's own API key.
+  // ---------------------------------------------------------------------
+
+  // Replaces an <input>/<textarea>'s whole value via execCommand("insertText")
+  // instead of bulk-assigning .value, so the change stays undoable with
+  // Ctrl+Z and doesn't reset the field's scroll position — same reasoning
+  // as applyCaseConversionTo above.
+  function replaceEditorContentUndoable(el, result) {
+    const before = el.value;
+    el.focus({ preventScroll: true });
+    el.setSelectionRange(0, before.length);
+    let usedExecCommand = false;
+    try {
+      usedExecCommand = !!(document.execCommand && document.execCommand("insertText", false, result));
+    } catch (e) { usedExecCommand = false; }
+    if (!usedExecCommand) {
+      el.value = result;
+      el.setSelectionRange(result.length, result.length);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  }
+
+  // Cuts text down to `limit` characters, backing off to the last whole
+  // word instead of chopping one in half, and appending an ellipsis when
+  // something was actually removed.
+  function trimTextToLimit(text, limit) {
+    if (text.length <= limit) return { result: text, trimmed: false };
+    const ELLIPSIS = "…";
+    const budget = Math.max(0, limit - ELLIPSIS.length);
+    let candidate = text.slice(0, budget);
+    const nextChar = text.charAt(budget);
+    const cutsMidWord = nextChar !== "" && !/\s/.test(nextChar);
+    if (cutsMidWord) {
+      // Back off to the last whitespace run so we don't chop a word in half.
+      const lastSpace = candidate.search(/\s+\S*$/);
+      if (lastSpace > 0) candidate = candidate.slice(0, lastSpace);
+    }
+    candidate = candidate.replace(/\s+$/, "");
+    const result = limit > 0 ? candidate + ELLIPSIS : "";
+    return { result, trimmed: true };
+  }
+
+  function applyCharLimitToEditor() {
+    const t = STR[lang];
+    const statusEl = $("charLimitStatus");
+    const full = input.value;
+    if (!full.trim()) {
+      if (statusEl) { statusEl.textContent = t.charLimitEmpty; statusEl.className = "status-line"; }
+      return;
+    }
+    const limit = parseInt($("charLimitInput").value, 10);
+    if (!Number.isFinite(limit) || limit <= 0) {
+      if (statusEl) { statusEl.textContent = t.charLimitInvalid; statusEl.className = "status-line err"; }
+      return;
+    }
+    const before = full.length;
+    const { result, trimmed } = trimTextToLimit(full, limit);
+    if (!trimmed) {
+      if (statusEl) { statusEl.textContent = t.charLimitFits(before, limit); statusEl.className = "status-line"; }
+      return;
+    }
+    replaceEditorContentUndoable(input, result);
+    if (statusEl) { statusEl.textContent = t.charLimitDone(before, result.length, limit); statusEl.className = "status-line ok"; }
+  }
+
+  // ---- Resumen inteligente local (offline extractive summary) ----------
+  // Splits the text into sentences (same regex the sentence-count stat
+  // uses), scores each one by how often its significant (non-stopword)
+  // words repeat across the whole document — the same idea behind the
+  // keyword-density table — with a small bonus for sentences that open or
+  // close a paragraph. It then greedily keeps the highest-scoring
+  // sentences that still fit the character budget, and reassembles them
+  // in their ORIGINAL order so the result reads start to finish instead
+  // of like a shuffled list of highlights.
+  function splitSentencesWithOffsets(text) {
+    const re = /[^.!?…]+[.!?…]+|\S+$/g;
+    const out = [];
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      const raw = m[0];
+      const trimmedText = raw.trim();
+      if (trimmedText) out.push({ trimmedText, start: m.index, end: m.index + raw.length });
+    }
+    return out;
+  }
+
+  function summarizeTextLocally(text, limit) {
+    if (text.length <= limit) return { result: text, trimmed: false };
+
+    const sentences = splitSentencesWithOffsets(text);
+    if (!sentences.length) return trimTextToLimit(text, limit);
+
+    const stop = STOPWORDS[lang];
+    const freq = new Map();
+    sentences.forEach((s) => {
+      tokenize(s.trimmedText).forEach((w) => {
+        if (stop.has(w)) return;
+        freq.set(w, (freq.get(w) || 0) + 1);
+      });
+    });
+
+    // Paragraph ranges, to bonus sentences that open/close a paragraph.
+    let paraCursor = 0;
+    const paraRanges = text.split(/\n+/).map((p) => {
+      const start = paraCursor;
+      const end = start + p.length;
+      paraCursor = end + 1; // account for the newline(s) split() consumed
+      return { start, end };
+    });
+    function paragraphBonusFor(sentence) {
+      const para = paraRanges.find((p) => sentence.start >= p.start && sentence.start < p.end);
+      if (!para) return 1;
+      const isFirst = Math.abs(sentence.start - para.start) < 3;
+      const isLast = Math.abs(sentence.end - para.end) < 3;
+      return isFirst || isLast ? 1.15 : 1;
+    }
+
+    const scored = sentences.map((s) => {
+      const words = tokenize(s.trimmedText);
+      const significant = words.filter((w) => !stop.has(w));
+      const rawScore = significant.reduce((sum, w) => sum + (freq.get(w) || 0), 0);
+      const normalized = words.length ? rawScore / Math.sqrt(words.length) : 0;
+      return Object.assign({}, s, { score: normalized * paragraphBonusFor(s) });
+    });
+
+    const byScore = scored.slice().sort((a, b) => b.score - a.score);
+    const selected = [];
+    let used = 0;
+    byScore.forEach((s) => {
+      const addLen = s.trimmedText.length + (selected.length ? 1 : 0); // +1 joining space
+      if (used + addLen <= limit) {
+        selected.push(s);
+        used += addLen;
+      }
+    });
+
+    if (!selected.length) {
+      // Nothing fit at all (a very tight limit) — fall back to trimming
+      // just the single most important sentence instead of returning
+      // nothing.
+      return trimTextToLimit(byScore[0].trimmedText, limit);
+    }
+
+    selected.sort((a, b) => a.start - b.start);
+    const result = selected.map((s) => s.trimmedText).join(" ");
+    return { result, trimmed: result !== text, kept: selected.length, total: sentences.length };
+  }
+
+  function applyLocalSummaryMode() {
+    const t = STR[lang];
+    const statusEl = $("charLimitStatus");
+    const full = input.value;
+    if (!full.trim()) {
+      if (statusEl) { statusEl.textContent = t.charLimitEmpty; statusEl.className = "status-line"; }
+      return;
+    }
+    const limit = parseInt($("charLimitInput").value, 10);
+    if (!Number.isFinite(limit) || limit <= 0) {
+      if (statusEl) { statusEl.textContent = t.charLimitInvalid; statusEl.className = "status-line err"; }
+      return;
+    }
+    const before = full.length;
+    const summary = summarizeTextLocally(full, limit);
+    if (!summary.trimmed) {
+      if (statusEl) { statusEl.textContent = t.charLimitFits(before, limit); statusEl.className = "status-line"; }
+      return;
+    }
+    replaceEditorContentUndoable(input, summary.result);
+    if (statusEl) {
+      statusEl.textContent = t.charLimitLocalDone(summary.kept || 0, summary.total || 0, summary.result.length, limit);
+      statusEl.className = "status-line ok";
+    }
+  }
+
+  // ---- Resumen con IA (online, via the user's own API key) -------------
+  function buildSummarizePrompt(text, limit) {
+    return `Resume o condensa el siguiente texto para que el resultado tenga como máximo ${limit} caracteres, contando espacios. Mantén el mismo idioma del texto original, conserva el sentido y las ideas más importantes de principio a fin, y no incluyas explicaciones, comillas ni introducciones: responde solo con el texto ya resumido.\n\nTEXTO:\n${text}`;
+  }
+
+  // Generic per-provider callers: each takes a fully-built prompt string and
+  // a max_tokens budget, so any feature (char-limit summary, citation
+  // adaptation, future tools) can reuse the same three network calls instead
+  // of duplicating them per feature.
+  async function callAnthropic(prompt, maxTokens, apiKey) {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: maxTokens,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    if (!resp.ok) {
+      const errBody = await resp.text().catch(() => "");
+      throw new Error(`Anthropic ${resp.status}: ${errBody.slice(0, 200)}`);
+    }
+    const data = await resp.json();
+    const out = (data.content || []).map((b) => b.text || "").join("").trim();
+    if (!out) throw new Error("Respuesta vacía de Claude.");
+    return out;
+  }
+
+  function extractOpenAiText(data) {
+    if (typeof data.output_text === "string" && data.output_text) return data.output_text;
+    try {
+      const parts = [];
+      (data.output || []).forEach((item) => {
+        (item.content || []).forEach((c) => { if (c.text) parts.push(c.text); });
+      });
+      return parts.join("");
+    } catch (e) { return ""; }
+  }
+
+  async function callOpenAi(prompt, maxTokens, apiKey) {
+    const resp = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-5.6-luna",
+        input: prompt,
+        max_output_tokens: maxTokens
+      })
+    });
+    if (!resp.ok) {
+      const errBody = await resp.text().catch(() => "");
+      throw new Error(`OpenAI ${resp.status}: ${errBody.slice(0, 200)}`);
+    }
+    const data = await resp.json();
+    const out = extractOpenAiText(data).trim();
+    if (!out) throw new Error("Respuesta vacía de OpenAI.");
+    return out;
+  }
+
+  async function callDeepSeek(prompt, maxTokens, apiKey) {
+    const resp = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "deepseek-v4-flash",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: maxTokens
+      })
+    });
+    if (!resp.ok) {
+      const errBody = await resp.text().catch(() => "");
+      throw new Error(`DeepSeek ${resp.status}: ${errBody.slice(0, 200)}`);
+    }
+    const data = await resp.json();
+    const out = (((data.choices || [])[0] || {}).message || {}).content;
+    const trimmed = (out || "").trim();
+    if (!trimmed) throw new Error("Respuesta vacía de DeepSeek.");
+    return trimmed;
+  }
+
+  async function callAiProvider(provider, prompt, maxTokens, apiKey) {
+    if (provider === "anthropic") return callAnthropic(prompt, maxTokens, apiKey);
+    if (provider === "openai") return callOpenAi(prompt, maxTokens, apiKey);
+    return callDeepSeek(prompt, maxTokens, apiKey);
+  }
+
+  function apiKeyForProvider(provider) {
+    if (provider === "anthropic") return charLimitSettings.anthropicKey || "";
+    if (provider === "openai") return charLimitSettings.openaiKey || "";
+    return charLimitSettings.deepseekKey || "";
+  }
+
+  async function applyAiSummaryMode() {
+    const t = STR[lang];
+    const statusEl = $("charLimitStatus");
+    const applyBtn = $("btnCharLimitApply");
+    const full = input.value;
+    if (!full.trim()) {
+      if (statusEl) { statusEl.textContent = t.charLimitEmpty; statusEl.className = "status-line"; }
+      return;
+    }
+    const limit = parseInt($("charLimitInput").value, 10);
+    if (!Number.isFinite(limit) || limit <= 0) {
+      if (statusEl) { statusEl.textContent = t.charLimitInvalid; statusEl.className = "status-line err"; }
+      return;
+    }
+    if (full.length <= limit) {
+      if (statusEl) { statusEl.textContent = t.charLimitFits(full.length, limit); statusEl.className = "status-line"; }
+      return;
+    }
+    const provider = $("charLimitAiProvider").value;
+    const apiKey = apiKeyForProvider(provider).trim();
+    if (!apiKey) {
+      if (statusEl) { statusEl.textContent = t.charLimitAiNoKey; statusEl.className = "status-line err"; }
+      return;
+    }
+
+    if (statusEl) { statusEl.textContent = t.charLimitAiWorking; statusEl.className = "status-line wait"; }
+    if (applyBtn) applyBtn.disabled = true;
+
+    try {
+      const prompt = buildSummarizePrompt(full, limit);
+      const maxTokens = Math.min(4000, Math.ceil(limit / 2) + 200);
+      const summary = await callAiProvider(provider, prompt, maxTokens, apiKey);
+
+      // Safety net: guarantee the limit is respected even if the model overshoots.
+      const safe = summary.length > limit ? trimTextToLimit(summary, limit).result : summary;
+      replaceEditorContentUndoable(input, safe);
+      if (statusEl) { statusEl.textContent = t.charLimitAiDone(full.length, safe.length, limit); statusEl.className = "status-line ok"; }
+    } catch (err) {
+      console.error("Resumen con IA:", err);
+      if (statusEl) { statusEl.textContent = t.charLimitAiError((err && err.message) || String(err)); statusEl.className = "status-line err"; }
+    } finally {
+      if (applyBtn) applyBtn.disabled = false;
+    }
+  }
+
+  function runCharLimitTool() {
+    const mode = $("charLimitMode").value;
+    if (mode === "local") applyLocalSummaryMode();
+    else if (mode === "ai") applyAiSummaryMode();
+    else applyCharLimitToEditor();
+  }
+
+  // ---------------------------------------------------------------------
+  // Adaptar citas con IA — a narrower, separate AI tool from the char-limit
+  // summary above: instead of shortening the text, it only fixes how
+  // chapter:verse-style numeric citations (e.g. "Juan 3:16") read out loud
+  // in TTS, since a bare "3:16" gets misread as a clock time. Two scopes:
+  // "citations" touches ONLY that pattern and leaves every other word,
+  // punctuation mark and line break untouched; "citations_plus" also lets
+  // the model clean up punctuation/flow for the rest of the text. Reuses
+  // the same provider + API key already configured in the char-limit card,
+  // so the user doesn't have to enter a key twice.
+  // ---------------------------------------------------------------------
+  function buildAdaptCitationsPrompt(text) {
+    return `Tu única tarea es corregir el formato de las citas o referencias numéricas de tipo "capítulo:versículo" (por ejemplo, referencias bíblicas como "Juan 3:16") que aparezcan en el siguiente texto, para que un lector de texto a voz (TTS) no las lea como si fueran una hora. Convierte el patrón número:número a su forma en palabras, eliminando los dos puntos (por ejemplo, "Juan 3:16" debe quedar como "Juan capítulo tres, versículo dieciséis"). No cambies absolutamente nada más: conserva cada palabra, signo de puntuación, salto de línea y el orden del resto del texto exactamente igual al original. No resumas, no reformules ni corrijas ortografía o redacción de ninguna otra parte. Responde solo con el texto completo resultante, sin explicaciones ni comillas.\n\nTEXTO:\n${text}`;
+  }
+
+  function buildAdaptCitationsPlusPrompt(text) {
+    return `Corrige el formato de las citas o referencias numéricas de tipo "capítulo:versículo" (por ejemplo, referencias bíblicas como "Juan 3:16") en el siguiente texto, para que un lector de texto a voz (TTS) no las lea como si fueran una hora: convierte el patrón número:número a su forma en palabras, eliminando los dos puntos (por ejemplo, "Juan 3:16" debe quedar como "Juan capítulo tres, versículo dieciséis"). Además, mejora la puntuación, la fluidez y la organización general del texto para que se lea mejor en voz alta. Mantén el mismo idioma, el mismo significado y todo el contenido original: no resumas, no elimines información ni cambies el sentido de ninguna frase, y respeta cualquier cita textual. Responde solo con el texto completo resultante, sin explicaciones ni comillas.\n\nTEXTO:\n${text}`;
+  }
+
+  function estimateAdaptMaxTokens(text) {
+    // The output is roughly the same length as the input (a bit longer once
+    // "3:16" becomes several spelled-out words), so size the budget off the
+    // source text rather than off a user-picked limit like the summary tool.
+    return Math.min(8000, Math.ceil(text.length / 2) + 500);
+  }
+
+  async function adaptCitationsWithAi() {
+    const t = STR[lang];
+    const statusEl = $("adaptAiStatus");
+    const btn = $("btnAdaptAi");
+    const full = input.value;
+    if (!full.trim()) {
+      if (statusEl) { statusEl.textContent = t.adaptAiEmpty; statusEl.className = "status-line"; }
+      return;
+    }
+    const provider = charLimitSettings.aiProvider;
+    const apiKey = apiKeyForProvider(provider).trim();
+    if (!apiKey) {
+      if (statusEl) { statusEl.textContent = t.adaptAiNoKey; statusEl.className = "status-line err"; }
+      return;
+    }
+
+    const scope = $("adaptAiScope").value;
+    const prompt = scope === "citations_plus" ? buildAdaptCitationsPlusPrompt(full) : buildAdaptCitationsPrompt(full);
+    const maxTokens = estimateAdaptMaxTokens(full);
+
+    if (statusEl) { statusEl.textContent = t.adaptAiWorking; statusEl.className = "status-line wait"; }
+    if (btn) btn.disabled = true;
+
+    try {
+      const result = await callAiProvider(provider, prompt, maxTokens, apiKey);
+      replaceEditorContentUndoable(input, result);
+      if (statusEl) { statusEl.textContent = t.adaptAiDone; statusEl.className = "status-line ok"; }
+    } catch (err) {
+      console.error("Adaptar citas con IA:", err);
+      if (statusEl) { statusEl.textContent = t.adaptAiError((err && err.message) || String(err)); statusEl.className = "status-line err"; }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  // ---- Persisted settings for the char-limit tool (mode, AI provider/keys) ----
+  const CHAR_LIMIT_KEY = "guionter-char-limit-settings";
+  function loadCharLimitSettings() {
+    try {
+      const raw = localStorage.getItem(CHAR_LIMIT_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return {
+        mode: parsed.mode || "trim",
+        aiProvider: parsed.aiProvider || "anthropic",
+        anthropicKey: parsed.anthropicKey || "",
+        openaiKey: parsed.openaiKey || "",
+        deepseekKey: parsed.deepseekKey || "",
+        adaptScope: parsed.adaptScope || "citations"
+      };
+    } catch (e) {
+      return { mode: "trim", aiProvider: "anthropic", anthropicKey: "", openaiKey: "", deepseekKey: "", adaptScope: "citations" };
+    }
+  }
+  let charLimitSettings = loadCharLimitSettings();
+  function saveCharLimitSettings() {
+    try { localStorage.setItem(CHAR_LIMIT_KEY, JSON.stringify(charLimitSettings)); } catch (e) { /* ignore */ }
+  }
+  function updateCharLimitModeVisibility() {
+    const isAi = $("charLimitMode").value === "ai";
+    $("charLimitAiSettings").style.display = isAi ? "flex" : "none";
+  }
+  function updateCharLimitAiKeyField() {
+    $("charLimitAiKey").value = apiKeyForProvider($("charLimitAiProvider").value);
+  }
+
+  // ---------------------------------------------------------------------
   // Buscar y reemplazar — a real find/replace over the main editor's text.
   // Case-insensitive, plain-text (no regex). Replacements go through
   // execCommand("insertText") too, so they stay undoable with Ctrl+Z and
@@ -1523,6 +2031,12 @@
   $("scriptSelect").addEventListener("change", () => loadScriptByName($("scriptSelect").value));
   $("scriptName").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); saveScript(); } });
   $("btnAdaptNumbers").addEventListener("click", adaptEditorTextForTts);
+  $("adaptAiScope").value = charLimitSettings.adaptScope;
+  $("adaptAiScope").addEventListener("change", () => {
+    charLimitSettings.adaptScope = $("adaptAiScope").value;
+    saveCharLimitSettings();
+  });
+  $("btnAdaptAi").addEventListener("click", adaptCitationsWithAi);
   $("btnCaseUpper").addEventListener("click", () => applyCaseConversion((s) => s.toUpperCase()));
   $("btnCaseLower").addEventListener("click", () => applyCaseConversion((s) => s.toLowerCase()));
   $("btnCaseTitle").addEventListener("click", () => applyCaseConversion(toTitleCaseText));
@@ -1550,6 +2064,34 @@
   $("btnReplaceAll").addEventListener("click", replaceAllInEditor);
   $("findInput").addEventListener("keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); findNextInEditor(); }
+  });
+
+  // Ajustar a un límite de caracteres
+  $("charLimitMode").value = charLimitSettings.mode;
+  $("charLimitAiProvider").value = charLimitSettings.aiProvider;
+  updateCharLimitModeVisibility();
+  updateCharLimitAiKeyField();
+  $("charLimitMode").addEventListener("change", () => {
+    charLimitSettings.mode = $("charLimitMode").value;
+    saveCharLimitSettings();
+    updateCharLimitModeVisibility();
+  });
+  $("charLimitAiProvider").addEventListener("change", () => {
+    charLimitSettings.aiProvider = $("charLimitAiProvider").value;
+    saveCharLimitSettings();
+    updateCharLimitAiKeyField();
+  });
+  $("charLimitAiKey").addEventListener("input", () => {
+    const provider = charLimitSettings.aiProvider;
+    const value = $("charLimitAiKey").value;
+    if (provider === "anthropic") charLimitSettings.anthropicKey = value;
+    else if (provider === "openai") charLimitSettings.openaiKey = value;
+    else charLimitSettings.deepseekKey = value;
+    saveCharLimitSettings();
+  });
+  $("btnCharLimitApply").addEventListener("click", runCharLimitTool);
+  $("charLimitInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); runCharLimitTool(); }
   });
 
   // Meta del guion (goal tracker)

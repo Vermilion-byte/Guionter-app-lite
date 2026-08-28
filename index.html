@@ -345,6 +345,16 @@
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <button class="btn" id="btnAdaptNumbers" type="button" title="Ctrl+Alt+A">🔢 <span id="t-adaptNumbersBtn">Adaptar texto para TTS</span></button>
           <span class="hint" id="adaptNumbersStatus"></span>
+          <span class="toolbar-divider"></span>
+          <label class="tts-dict-field" style="flex:0 0 190px;min-width:170px;">
+            <span id="t-adaptAiScopeLabel">Alcance</span>
+            <select id="adaptAiScope">
+              <option value="citations" id="t-adaptAiScopeCitations">Solo citas</option>
+              <option value="citations_plus" id="t-adaptAiScopeCitationsPlus">Citas + limpieza general</option>
+            </select>
+          </label>
+          <button class="btn" id="btnAdaptAi" type="button">✨ <span id="t-adaptAiBtn">Adaptar citas con IA</span></button>
+          <span class="hint" id="adaptAiStatus"></span>
         </div>
       </div>
       <div class="editor-toolbar" style="border-top:1px solid var(--border);">
@@ -460,6 +470,42 @@
         </div>
         <div class="goal-progress-track"><div class="goal-progress-fill" id="goalProgressFill"></div></div>
         <p class="status-line" id="goalStatus" style="margin-top:8px;"></p>
+      </div>
+
+      <!-- Ajustar a un límite de caracteres: trim, local summary, or AI summary -->
+      <div class="card">
+        <p class="section-title" id="t-charLimitTitle">Ajustar a un límite de caracteres</p>
+        <p class="hint" id="t-charLimitHint" style="margin:0 0 10px;">Escribe el máximo de caracteres permitido y elige cómo quieres llegar a él.</p>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px;">
+          <label class="tts-dict-field" style="flex:1 1 140px;min-width:130px;">
+            <span id="t-charLimitModeLabel">Modo</span>
+            <select id="charLimitMode">
+              <option value="trim" id="t-charLimitModeTrim">Recortar (desde el final)</option>
+              <option value="local" id="t-charLimitModeLocal">Resumen inteligente (sin conexión)</option>
+              <option value="ai" id="t-charLimitModeAi">Resumen con IA (en línea)</option>
+            </select>
+          </label>
+          <label class="tts-dict-field" style="flex:1 1 140px;min-width:130px;">
+            <span id="t-charLimitLabel">Límite de caracteres</span>
+            <input type="number" id="charLimitInput" min="1">
+          </label>
+        </div>
+        <div id="charLimitAiSettings" style="display:none;flex-direction:column;gap:10px;margin-bottom:10px;">
+          <label class="tts-dict-field" style="flex:none;">
+            <span id="t-charLimitAiProviderLabel">Proveedor de IA</span>
+            <select id="charLimitAiProvider">
+              <option value="anthropic" id="t-charLimitAiProviderAnthropic">Claude (Anthropic)</option>
+              <option value="openai" id="t-charLimitAiProviderOpenai">ChatGPT (OpenAI)</option>
+              <option value="deepseek" id="t-charLimitAiProviderDeepseek">DeepSeek</option>
+            </select>
+          </label>
+          <label class="tts-dict-field" style="flex:none;">
+            <span id="t-charLimitAiKeyLabel">Tu clave de API (se guarda solo en este navegador)</span>
+            <input type="password" id="charLimitAiKey" autocomplete="off">
+          </label>
+        </div>
+        <button class="btn" id="btnCharLimitApply" type="button"><span id="t-charLimitApply">Aplicar</span></button>
+        <p class="status-line" id="charLimitStatus" style="margin-top:8px;"></p>
       </div>
 
       <div class="card">
