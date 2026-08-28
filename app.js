@@ -78,7 +78,7 @@
       adaptAiScopeCitationsPlus: "Citas + limpieza general",
       adaptAiBtn: "Adaptar citas con IA",
       adaptAiEmpty: "No hay texto en el editor para adaptar.",
-      adaptAiNoKey: "Ingresa tu clave de API del proveedor elegido (en la tarjeta de límite de caracteres) para usar esta función.",
+      adaptAiNoKey: "Ingresa tu clave de API de Gemini (en la tarjeta de límite de caracteres) para usar esta función.",
       adaptAiWorking: "Adaptando citas con IA…",
       adaptAiDone: "Listo — revisa el resultado antes de generar el audio.",
       adaptAiError: (msg) => `No se pudo adaptar el texto con IA: ${msg}`,
@@ -116,12 +116,9 @@
       charLimitFits: (count, limit) => `Tu texto ya tiene ${count} caracteres, dentro del límite de ${limit}. No se modificó nada.`,
       charLimitDone: (before, after, limit) => `Se recortó de ${before} a ${after} caracteres (límite: ${limit}).`,
       charLimitLocalDone: (kept, total, chars, limit) => `Resumen local: se conservaron ${kept} de ${total} oraciones (${chars} de un límite de ${limit} caracteres).`,
-      charLimitAiProviderLabel: "Proveedor de IA",
-      charLimitAiProviderAnthropic: "Claude (Anthropic)",
-      charLimitAiProviderOpenai: "ChatGPT (OpenAI)",
-      charLimitAiProviderDeepseek: "DeepSeek",
-      charLimitAiKeyLabel: "Tu clave de API (se guarda solo en este navegador)",
-      charLimitAiNoKey: "Ingresa tu clave de API del proveedor elegido para usar el resumen con IA.",
+      charLimitAiKeyLabel: "Tu clave de API de Google Gemini — gratis, sin tarjeta (se guarda solo en este navegador)",
+      charLimitAiKeyHint: "Consíguela gratis en aistudio.google.com/apikey (no requiere tarjeta).",
+      charLimitAiNoKey: "Ingresa tu clave de API de Gemini para usar el resumen con IA.",
       charLimitAiWorking: "Generando resumen con IA…",
       charLimitAiDone: (before, after, limit) => `Resumen con IA: de ${before} a ${after} caracteres (límite: ${limit}).`,
       charLimitAiError: (msg) => `No se pudo generar el resumen con IA: ${msg}`,
@@ -224,7 +221,7 @@
       adaptAiScopeCitationsPlus: "Citations + general cleanup",
       adaptAiBtn: "Adapt citations with AI",
       adaptAiEmpty: "There's no text in the editor to adapt.",
-      adaptAiNoKey: "Enter your API key for the chosen provider (in the character-limit card) to use this feature.",
+      adaptAiNoKey: "Enter your Gemini API key (in the character-limit card) to use this feature.",
       adaptAiWorking: "Adapting citations with AI…",
       adaptAiDone: "Done — review the result before generating audio.",
       adaptAiError: (msg) => `Couldn't adapt the text with AI: ${msg}`,
@@ -262,12 +259,9 @@
       charLimitFits: (count, limit) => `Your text already has ${count} characters, within the ${limit} limit. Nothing was changed.`,
       charLimitDone: (before, after, limit) => `Trimmed from ${before} to ${after} characters (limit: ${limit}).`,
       charLimitLocalDone: (kept, total, chars, limit) => `Local summary: kept ${kept} of ${total} sentences (${chars} of a ${limit}-character limit).`,
-      charLimitAiProviderLabel: "AI provider",
-      charLimitAiProviderAnthropic: "Claude (Anthropic)",
-      charLimitAiProviderOpenai: "ChatGPT (OpenAI)",
-      charLimitAiProviderDeepseek: "DeepSeek",
-      charLimitAiKeyLabel: "Your API key (stored only in this browser)",
-      charLimitAiNoKey: "Enter your API key for the selected provider to use the AI summary.",
+      charLimitAiKeyLabel: "Your Google Gemini API key — free, no card required (stored only in this browser)",
+      charLimitAiKeyHint: "Get one for free at aistudio.google.com/apikey (no card needed).",
+      charLimitAiNoKey: "Enter your Gemini API key to use the AI summary.",
       charLimitAiWorking: "Generating AI summary…",
       charLimitAiDone: (before, after, limit) => `AI summary: from ${before} to ${after} characters (limit: ${limit}).`,
       charLimitAiError: (msg) => `Couldn't generate the AI summary: ${msg}`,
@@ -390,11 +384,8 @@
     $("t-charLimitLabel").textContent = t.charLimitLabel;
     $("t-charLimitApply").textContent = t.charLimitApply;
     $("charLimitInput").placeholder = t.charLimitPlaceholder;
-    $("t-charLimitAiProviderLabel").textContent = t.charLimitAiProviderLabel;
-    $("t-charLimitAiProviderAnthropic").textContent = t.charLimitAiProviderAnthropic;
-    $("t-charLimitAiProviderOpenai").textContent = t.charLimitAiProviderOpenai;
-    $("t-charLimitAiProviderDeepseek").textContent = t.charLimitAiProviderDeepseek;
     $("t-charLimitAiKeyLabel").textContent = t.charLimitAiKeyLabel;
+    $("t-charLimitAiKeyHint").textContent = t.charLimitAiKeyHint;
     $("t-goalTitle").textContent = t.goalTitle;
     $("t-goalUnitLabel").textContent = t.goalUnitLabel;
     $("t-goalUnitWords").textContent = t.goalUnitWords;
@@ -1513,99 +1504,30 @@
   // a max_tokens budget, so any feature (char-limit summary, citation
   // adaptation, future tools) can reuse the same three network calls instead
   // of duplicating them per feature.
-  async function callAnthropic(prompt, maxTokens, apiKey) {
-    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+  // Google Gemini is the only AI provider: its API has a genuinely free
+  // tier (no card, no payment ever required for gemini-3.1-flash-lite), so
+  // it's the one option that stays free the way the web chat versions of
+  // these tools feel free — unlike Anthropic/OpenAI/DeepSeek, which are all
+  // metered, pay-per-use APIs once any trial credit runs out.
+  async function callGemini(prompt, maxTokens, apiKey) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const resp = await fetch(url, {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: maxTokens,
-        messages: [{ role: "user", content: prompt }]
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: maxTokens }
       })
     });
     if (!resp.ok) {
       const errBody = await resp.text().catch(() => "");
-      throw new Error(`Anthropic ${resp.status}: ${errBody.slice(0, 200)}`);
+      throw new Error(`Gemini ${resp.status}: ${errBody.slice(0, 200)}`);
     }
     const data = await resp.json();
-    const out = (data.content || []).map((b) => b.text || "").join("").trim();
-    if (!out) throw new Error("Respuesta vacía de Claude.");
+    const parts = ((((data.candidates || [])[0] || {}).content || {}).parts) || [];
+    const out = parts.map((p) => p.text || "").join("").trim();
+    if (!out) throw new Error("Respuesta vacía de Gemini.");
     return out;
-  }
-
-  function extractOpenAiText(data) {
-    if (typeof data.output_text === "string" && data.output_text) return data.output_text;
-    try {
-      const parts = [];
-      (data.output || []).forEach((item) => {
-        (item.content || []).forEach((c) => { if (c.text) parts.push(c.text); });
-      });
-      return parts.join("");
-    } catch (e) { return ""; }
-  }
-
-  async function callOpenAi(prompt, maxTokens, apiKey) {
-    const resp = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: "gpt-5.6-luna",
-        input: prompt,
-        max_output_tokens: maxTokens
-      })
-    });
-    if (!resp.ok) {
-      const errBody = await resp.text().catch(() => "");
-      throw new Error(`OpenAI ${resp.status}: ${errBody.slice(0, 200)}`);
-    }
-    const data = await resp.json();
-    const out = extractOpenAiText(data).trim();
-    if (!out) throw new Error("Respuesta vacía de OpenAI.");
-    return out;
-  }
-
-  async function callDeepSeek(prompt, maxTokens, apiKey) {
-    const resp = await fetch("https://api.deepseek.com/chat/completions", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: "deepseek-v4-flash",
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: maxTokens
-      })
-    });
-    if (!resp.ok) {
-      const errBody = await resp.text().catch(() => "");
-      throw new Error(`DeepSeek ${resp.status}: ${errBody.slice(0, 200)}`);
-    }
-    const data = await resp.json();
-    const out = (((data.choices || [])[0] || {}).message || {}).content;
-    const trimmed = (out || "").trim();
-    if (!trimmed) throw new Error("Respuesta vacía de DeepSeek.");
-    return trimmed;
-  }
-
-  async function callAiProvider(provider, prompt, maxTokens, apiKey) {
-    if (provider === "anthropic") return callAnthropic(prompt, maxTokens, apiKey);
-    if (provider === "openai") return callOpenAi(prompt, maxTokens, apiKey);
-    return callDeepSeek(prompt, maxTokens, apiKey);
-  }
-
-  function apiKeyForProvider(provider) {
-    if (provider === "anthropic") return charLimitSettings.anthropicKey || "";
-    if (provider === "openai") return charLimitSettings.openaiKey || "";
-    return charLimitSettings.deepseekKey || "";
   }
 
   async function applyAiSummaryMode() {
@@ -1626,8 +1548,7 @@
       if (statusEl) { statusEl.textContent = t.charLimitFits(full.length, limit); statusEl.className = "status-line"; }
       return;
     }
-    const provider = $("charLimitAiProvider").value;
-    const apiKey = apiKeyForProvider(provider).trim();
+    const apiKey = (charLimitSettings.geminiKey || "").trim();
     if (!apiKey) {
       if (statusEl) { statusEl.textContent = t.charLimitAiNoKey; statusEl.className = "status-line err"; }
       return;
@@ -1639,7 +1560,7 @@
     try {
       const prompt = buildSummarizePrompt(full, limit);
       const maxTokens = Math.min(4000, Math.ceil(limit / 2) + 200);
-      const summary = await callAiProvider(provider, prompt, maxTokens, apiKey);
+      const summary = await callGemini(prompt, maxTokens, apiKey);
 
       // Safety net: guarantee the limit is respected even if the model overshoots.
       const safe = summary.length > limit ? trimTextToLimit(summary, limit).result : summary;
@@ -1695,8 +1616,7 @@
       if (statusEl) { statusEl.textContent = t.adaptAiEmpty; statusEl.className = "status-line"; }
       return;
     }
-    const provider = charLimitSettings.aiProvider;
-    const apiKey = apiKeyForProvider(provider).trim();
+    const apiKey = (charLimitSettings.geminiKey || "").trim();
     if (!apiKey) {
       if (statusEl) { statusEl.textContent = t.adaptAiNoKey; statusEl.className = "status-line err"; }
       return;
@@ -1710,7 +1630,7 @@
     if (btn) btn.disabled = true;
 
     try {
-      const result = await callAiProvider(provider, prompt, maxTokens, apiKey);
+      const result = await callGemini(prompt, maxTokens, apiKey);
       replaceEditorContentUndoable(input, result);
       if (statusEl) { statusEl.textContent = t.adaptAiDone; statusEl.className = "status-line ok"; }
     } catch (err) {
@@ -1721,7 +1641,7 @@
     }
   }
 
-  // ---- Persisted settings for the char-limit tool (mode, AI provider/keys) ----
+  // ---- Persisted settings for the char-limit tool (mode, Gemini key) ----
   const CHAR_LIMIT_KEY = "guionter-char-limit-settings";
   function loadCharLimitSettings() {
     try {
@@ -1729,14 +1649,11 @@
       const parsed = raw ? JSON.parse(raw) : {};
       return {
         mode: parsed.mode || "trim",
-        aiProvider: parsed.aiProvider || "anthropic",
-        anthropicKey: parsed.anthropicKey || "",
-        openaiKey: parsed.openaiKey || "",
-        deepseekKey: parsed.deepseekKey || "",
+        geminiKey: parsed.geminiKey || "",
         adaptScope: parsed.adaptScope || "citations"
       };
     } catch (e) {
-      return { mode: "trim", aiProvider: "anthropic", anthropicKey: "", openaiKey: "", deepseekKey: "", adaptScope: "citations" };
+      return { mode: "trim", geminiKey: "", adaptScope: "citations" };
     }
   }
   let charLimitSettings = loadCharLimitSettings();
@@ -1746,9 +1663,6 @@
   function updateCharLimitModeVisibility() {
     const isAi = $("charLimitMode").value === "ai";
     $("charLimitAiSettings").style.display = isAi ? "flex" : "none";
-  }
-  function updateCharLimitAiKeyField() {
-    $("charLimitAiKey").value = apiKeyForProvider($("charLimitAiProvider").value);
   }
 
   // ---------------------------------------------------------------------
@@ -2068,25 +1982,15 @@
 
   // Ajustar a un límite de caracteres
   $("charLimitMode").value = charLimitSettings.mode;
-  $("charLimitAiProvider").value = charLimitSettings.aiProvider;
+  $("charLimitAiKey").value = charLimitSettings.geminiKey;
   updateCharLimitModeVisibility();
-  updateCharLimitAiKeyField();
   $("charLimitMode").addEventListener("change", () => {
     charLimitSettings.mode = $("charLimitMode").value;
     saveCharLimitSettings();
     updateCharLimitModeVisibility();
   });
-  $("charLimitAiProvider").addEventListener("change", () => {
-    charLimitSettings.aiProvider = $("charLimitAiProvider").value;
-    saveCharLimitSettings();
-    updateCharLimitAiKeyField();
-  });
   $("charLimitAiKey").addEventListener("input", () => {
-    const provider = charLimitSettings.aiProvider;
-    const value = $("charLimitAiKey").value;
-    if (provider === "anthropic") charLimitSettings.anthropicKey = value;
-    else if (provider === "openai") charLimitSettings.openaiKey = value;
-    else charLimitSettings.deepseekKey = value;
+    charLimitSettings.geminiKey = $("charLimitAiKey").value;
     saveCharLimitSettings();
   });
   $("btnCharLimitApply").addEventListener("click", runCharLimitTool);

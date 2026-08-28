@@ -490,19 +490,12 @@
             <input type="number" id="charLimitInput" min="1">
           </label>
         </div>
-        <div id="charLimitAiSettings" style="display:none;flex-direction:column;gap:10px;margin-bottom:10px;">
+        <div id="charLimitAiSettings" style="display:none;flex-direction:column;gap:6px;margin-bottom:10px;">
           <label class="tts-dict-field" style="flex:none;">
-            <span id="t-charLimitAiProviderLabel">Proveedor de IA</span>
-            <select id="charLimitAiProvider">
-              <option value="anthropic" id="t-charLimitAiProviderAnthropic">Claude (Anthropic)</option>
-              <option value="openai" id="t-charLimitAiProviderOpenai">ChatGPT (OpenAI)</option>
-              <option value="deepseek" id="t-charLimitAiProviderDeepseek">DeepSeek</option>
-            </select>
-          </label>
-          <label class="tts-dict-field" style="flex:none;">
-            <span id="t-charLimitAiKeyLabel">Tu clave de API (se guarda solo en este navegador)</span>
+            <span id="t-charLimitAiKeyLabel">Tu clave de API de Google Gemini — gratis, sin tarjeta (se guarda solo en este navegador)</span>
             <input type="password" id="charLimitAiKey" autocomplete="off">
           </label>
+          <p class="hint" id="t-charLimitAiKeyHint" style="margin:0;">Consíguela gratis en aistudio.google.com/apikey (no requiere tarjeta).</p>
         </div>
         <button class="btn" id="btnCharLimitApply" type="button"><span id="t-charLimitApply">Aplicar</span></button>
         <p class="status-line" id="charLimitStatus" style="margin-top:8px;"></p>
