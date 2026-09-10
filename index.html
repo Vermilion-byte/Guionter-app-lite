@@ -29,8 +29,10 @@
     --accent2:#253900;
     --accent2-dim:#E4E8D6;
     --good:#1B8A5A;
+    --good-dim:#DFF3EA;
     --warn:#B45309;
     --bad:#C0392B;
+    --bad-dim:#FBE1DE;
     --shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.08);
     --radius:14px;
     --font-display: "Fraunces", Georgia, "Times New Roman", serif;
@@ -51,8 +53,10 @@
       --accent2:#B7C98A;
       --accent2-dim:#212B10;
       --good:#3ecf8e;
+      --good-dim:#12291F;
       --warn:#e0a94f;
       --bad:#E2694F;
+      --bad-dim:#2E1712;
       --shadow: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.55);
     }
   }
@@ -69,8 +73,10 @@
     --accent2:#B7C98A;
     --accent2-dim:#212B10;
     --good:#3ecf8e;
+    --good-dim:#12291F;
     --warn:#e0a94f;
     --bad:#E2694F;
+    --bad-dim:#2E1712;
     --shadow: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.55);
   }
   *{box-sizing:border-box;}
@@ -296,6 +302,24 @@
   .footer-note{
     margin-top:26px;font-size:12px;color:var(--text-dim);text-align:center;line-height:1.6;
   }
+  .compare-textarea{
+    width:100%;box-sizing:border-box;min-height:160px;resize:vertical;
+    border:1px solid var(--border);background:var(--surface-alt);color:var(--text);
+    padding:10px 12px;border-radius:8px;font-size:13.5px;line-height:1.55;font-family:var(--font);
+  }
+  .compare-textarea::placeholder{color:var(--text-dim);}
+  .compare-view-box{
+    border:1px solid var(--border);background:var(--surface-alt);border-radius:8px;
+    padding:12px 14px;font-size:13.5px;line-height:1.65;white-space:pre-wrap;word-wrap:break-word;
+    max-height:420px;overflow-y:auto;
+  }
+  .compare-view-box:empty::before{content:attr(data-empty);color:var(--text-dim);}
+  .cmp-del{text-decoration:line-through;color:var(--bad);background:var(--bad-dim);border-radius:3px;}
+  .cmp-ins{text-decoration:underline;text-decoration-thickness:2px;color:var(--good);background:var(--good-dim);border-radius:3px;}
+  .compare-summary{font-size:13px;color:var(--text-dim);}
+  .compare-summary .pct{font-family:var(--font-mono);font-weight:700;font-size:17px;color:var(--text);}
+  .compare-summary .cmp-add-count{color:var(--good);font-weight:700;}
+  .compare-summary .cmp-del-count{color:var(--bad);font-weight:700;}
   ::-webkit-scrollbar{width:8px;height:8px;}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 </style>
@@ -535,6 +559,60 @@
     <button class="btn primary" id="btnGrammar" type="button"><span id="t-grammarBtn">Revisar ortografía y gramática</span></button>
     <div class="status-line" id="grammarStatus"></div>
     <div class="grammar-list" id="grammarList" style="margin-top:12px;"></div>
+  </section>
+
+  <!-- Compare two versions of the text: side-by-side / unified diff -->
+  <section class="card" style="margin-top:18px;" id="compareCard">
+    <p class="section-title" id="t-compareTitle">Comparar versiones del texto</p>
+    <p class="empty-hint" id="t-compareHint" style="margin-bottom:12px;">
+      Compara dos versiones de tu guion: qué tan parecidas son, qué se agregó y qué se eliminó, resaltado como si fueran dos páginas una al lado de otra.
+    </p>
+
+    <p class="hint" id="compareAutoHint" style="display:none;margin:0 0 10px;"></p>
+
+    <div class="tts-dict-row" style="align-items:stretch;">
+      <div style="flex:1 1 300px;min-width:260px;display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="hint" id="t-compareLabelA" style="font-weight:700;">Texto original</span>
+          <button class="btn" id="btnCompareUseEditorA" type="button" style="padding:4px 10px;font-size:12px;"><span id="t-compareUseEditorA">Usar editor actual</span></button>
+        </div>
+        <textarea id="compareTextA" class="compare-textarea" placeholder="Pega o escribe la versión original…"></textarea>
+      </div>
+      <div style="flex:1 1 300px;min-width:260px;display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="hint" id="t-compareLabelB" style="font-weight:700;">Texto nuevo</span>
+          <button class="btn" id="btnCompareUseEditorB" type="button" style="padding:4px 10px;font-size:12px;"><span id="t-compareUseEditorB">Usar editor actual</span></button>
+        </div>
+        <textarea id="compareTextB" class="compare-textarea" placeholder="Pega o escribe la versión nueva…"></textarea>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px;">
+      <button class="btn primary" id="btnCompareRun" type="button"><span id="t-compareRunBtn">Comparar</span></button>
+      <button class="btn" id="btnCompareLoadAuto" type="button" style="display:none;"><span id="t-compareLoadAuto">Cargar último cambio detectado</span></button>
+    </div>
+    <div class="status-line" id="compareStatus" style="margin-top:8px;"></div>
+
+    <div id="compareResult" style="display:none;margin-top:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+        <p class="compare-summary" id="compareSummary"></p>
+        <div class="tabs" id="compareViewTabs">
+          <button class="tab active" data-view="side" id="compareViewSideBtn" type="button"><span id="t-compareViewSide">Lado a lado</span></button>
+          <button class="tab" data-view="unified" id="compareViewUnifiedBtn" type="button"><span id="t-compareViewUnified">Unificado</span></button>
+        </div>
+      </div>
+      <div id="compareSideView" class="tts-dict-row" style="align-items:stretch;">
+        <div style="flex:1 1 300px;min-width:260px;">
+          <p class="hint" style="font-weight:700;margin:0 0 6px;" id="t-compareLabelA2">Texto original</p>
+          <div class="compare-view-box" id="compareSideA"></div>
+        </div>
+        <div style="flex:1 1 300px;min-width:260px;">
+          <p class="hint" style="font-weight:700;margin:0 0 6px;" id="t-compareLabelB2">Texto nuevo</p>
+          <div class="compare-view-box" id="compareSideB"></div>
+        </div>
+      </div>
+      <div id="compareUnifiedView" class="compare-view-box" style="display:none;"></div>
+    </div>
   </section>
 
   <p class="footer-note" id="t-footer">

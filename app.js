@@ -151,7 +151,30 @@
       ttsDictToPlaceholder: "Amen",
       ttsDictAdd: "Agregar",
       ttsDictEmpty: "Aún no tienes reemplazos guardados.",
-      ttsDictRemove: "Eliminar"
+      ttsDictRemove: "Eliminar",
+      compareTitle: "Comparar versiones del texto",
+      compareHint: "Compara dos versiones de tu guion: qué tan parecidas son, qué se agregó y qué se eliminó, resaltado como si fueran dos páginas una al lado de otra.",
+      compareLabelA: "Texto original",
+      compareLabelB: "Texto nuevo",
+      compareUseEditor: "Usar editor actual",
+      comparePlaceholderA: "Pega o escribe la versión original…",
+      comparePlaceholderB: "Pega o escribe la versión nueva…",
+      compareRunBtn: "Comparar",
+      compareLoadAuto: "Cargar último cambio detectado",
+      compareAutoHint: (elapsed) => `Se detectó que reemplazaste todo el texto del editor ${elapsed}. Pulsa "Cargar último cambio detectado" para compararlo, o pega tú mismo lo que quieras comparar arriba.`,
+      compareElapsedSeconds: "hace unos segundos",
+      compareElapsedMinutes: (n) => `hace ${n} minuto${n === 1 ? "" : "s"}`,
+      compareElapsedHours: (n) => `hace ${n} hora${n === 1 ? "" : "s"}`,
+      compareElapsedDays: (n) => `hace ${n} día${n === 1 ? "" : "s"}`,
+      compareEmpty: "Escribe o pega texto en los dos cuadros (original y nuevo) antes de comparar.",
+      compareTooLong: (maxWords) => `Los textos son demasiado largos para comparar de una vez (más de ${maxWords} palabras entre los dos). Prueba comparar por partes.`,
+      compareTooDifferent: "Los textos son muy distintos entre sí — aquí tienes solo un porcentaje aproximado de similitud; el detalle palabra por palabra no se muestra para textos tan diferentes.",
+      compareDone: "Comparación lista.",
+      compareSummaryPct: (pct) => `${pct}% de similitud`,
+      compareSummaryCounts: (added, removed, unchanged) => `${added} agregada${added === 1 ? "" : "s"} · ${removed} eliminada${removed === 1 ? "" : "s"} · ${unchanged} sin cambios`,
+      compareViewSide: "Lado a lado",
+      compareViewUnified: "Unificado",
+      compareViewEmpty: "No hay texto para mostrar."
     },
     en: {
       title: "Guionter",
@@ -294,7 +317,30 @@
       ttsDictToPlaceholder: "Aymen",
       ttsDictAdd: "Add",
       ttsDictEmpty: "You don't have any saved replacements yet.",
-      ttsDictRemove: "Remove"
+      ttsDictRemove: "Remove",
+      compareTitle: "Compare text versions",
+      compareHint: "Compare two versions of your script: how similar they are, what was added, and what was removed — highlighted as if they were two pages side by side.",
+      compareLabelA: "Original text",
+      compareLabelB: "New text",
+      compareUseEditor: "Use current editor text",
+      comparePlaceholderA: "Paste or write the original version…",
+      comparePlaceholderB: "Paste or write the new version…",
+      compareRunBtn: "Compare",
+      compareLoadAuto: "Load last detected change",
+      compareAutoHint: (elapsed) => `A change that replaced the entire editor text was detected ${elapsed}. Click "Load last detected change" to compare it, or paste whatever you want to compare above.`,
+      compareElapsedSeconds: "a few seconds ago",
+      compareElapsedMinutes: (n) => `${n} minute${n === 1 ? "" : "s"} ago`,
+      compareElapsedHours: (n) => `${n} hour${n === 1 ? "" : "s"} ago`,
+      compareElapsedDays: (n) => `${n} day${n === 1 ? "" : "s"} ago`,
+      compareEmpty: "Write or paste text in both boxes (original and new) before comparing.",
+      compareTooLong: (maxWords) => `The texts are too long to compare at once (more than ${maxWords} words combined). Try comparing smaller sections.`,
+      compareTooDifferent: "These texts are very different from each other — here's only an approximate similarity percentage; word-by-word detail isn't shown for texts this different.",
+      compareDone: "Comparison ready.",
+      compareSummaryPct: (pct) => `${pct}% similar`,
+      compareSummaryCounts: (added, removed, unchanged) => `${added} added · ${removed} removed · ${unchanged} unchanged`,
+      compareViewSide: "Side by side",
+      compareViewUnified: "Unified",
+      compareViewEmpty: "No text to show."
     }
   };
 
@@ -407,6 +453,22 @@
     $("ttsDictFrom").placeholder = t.ttsDictFromPlaceholder;
     $("ttsDictTo").placeholder = t.ttsDictToPlaceholder;
     renderTtsDictionary();
+    $("t-compareTitle").textContent = t.compareTitle;
+    $("t-compareHint").textContent = t.compareHint;
+    $("t-compareLabelA").textContent = t.compareLabelA;
+    $("t-compareLabelB").textContent = t.compareLabelB;
+    $("t-compareLabelA2").textContent = t.compareLabelA;
+    $("t-compareLabelB2").textContent = t.compareLabelB;
+    $("t-compareUseEditorA").textContent = t.compareUseEditor;
+    $("t-compareUseEditorB").textContent = t.compareUseEditor;
+    $("compareTextA").placeholder = t.comparePlaceholderA;
+    $("compareTextB").placeholder = t.comparePlaceholderB;
+    $("t-compareRunBtn").textContent = t.compareRunBtn;
+    $("t-compareLoadAuto").textContent = t.compareLoadAuto;
+    $("t-compareViewSide").textContent = t.compareViewSide;
+    $("t-compareViewUnified").textContent = t.compareViewUnified;
+    updateCompareAutoHint();
+    refreshCompareResultLabels();
     document.title = t.title + " — " + (lang === "es" ? "Contador de Palabras y Caracteres" : "Word & Character Counter");
     recompute();
   }
@@ -1330,6 +1392,11 @@
   // as applyCaseConversionTo above.
   function replaceEditorContentUndoable(el, result) {
     const before = el.value;
+    // Stash the pre-replace text so the "Comparar" tool can offer it as
+    // the automatic "before" version — covers every full-editor replace
+    // done through Guionter's own tools (adapt/trim/summary), on top of
+    // the separate manual-paste detection wired to the editor itself.
+    if (el === input) recordEditorSnapshot(before);
     el.focus({ preventScroll: true });
     el.setSelectionRange(0, before.length);
     let usedExecCommand = false;
@@ -1743,6 +1810,7 @@
     });
     result += text.slice(lastIndex);
 
+    recordEditorSnapshot(text);
     input.focus();
     input.setSelectionRange(0, text.length);
     const ok = document.execCommand && document.execCommand("insertText", false, result);
@@ -1847,9 +1915,281 @@
       status.textContent = t.adaptNumbersNone;
       return;
     }
+    recordEditorSnapshot(before);
     input.value = afterDict;
     input.dispatchEvent(new Event("input", { bubbles: true }));
     status.textContent = t.adaptNumbersDone(totalChanges);
+  }
+
+  // ---------------------------------------------------------------------
+  // Comparar versiones del texto — a word-level diff between any two
+  // pasted/typed texts (typically: the editor's content right before you
+  // paste in a version you fixed somewhere else, vs. right after). Shows
+  // a similarity percentage plus a side-by-side view (each pane only
+  // highlights its own additions/removals, like two pages compared next
+  // to each other) and a unified "track changes" view (insertions
+  // underlined, deletions struck through, inline). Runs entirely
+  // offline — no API calls, no data leaves the browser.
+  // ---------------------------------------------------------------------
+  const DIFF_MAX_D = 1000;       // bounds worst-case runtime (Myers' diff is
+                                  // O(N*D)) when the two texts share almost
+                                  // nothing — see computeTextDiff's fallback
+  const DIFF_TOKEN_CAP = 30000;  // combined token safety cap for very long pastes
+
+  let lastEditorSnapshot = null; // { text, at } — the editor's content right
+                                  // before the most recent full-content
+                                  // replace (manual paste-replace, or any of
+                                  // Guionter's own adapt/trim/summary tools)
+  let lastCompareDiff = null;    // cached result of the last successful
+                                  // compare, so switching language or the
+                                  // side/unified toggle re-renders without
+                                  // recomputing the diff
+
+  function recordEditorSnapshot(text) {
+    lastEditorSnapshot = { text, at: Date.now() };
+    updateCompareAutoHint();
+  }
+
+  function formatElapsed(atMs) {
+    const t = STR[lang];
+    const s = Math.round((Date.now() - atMs) / 1000);
+    if (s < 60) return t.compareElapsedSeconds;
+    const m = Math.round(s / 60);
+    if (m < 60) return t.compareElapsedMinutes(m);
+    const h = Math.round(m / 60);
+    if (h < 24) return t.compareElapsedHours(h);
+    const d = Math.round(h / 24);
+    return t.compareElapsedDays(d);
+  }
+
+  function updateCompareAutoHint() {
+    const t = STR[lang];
+    const hintEl = $("compareAutoHint");
+    const btn = $("btnCompareLoadAuto");
+    if (!hintEl || !btn) return;
+    if (lastEditorSnapshot) {
+      hintEl.textContent = t.compareAutoHint(formatElapsed(lastEditorSnapshot.at));
+      hintEl.style.display = "";
+      btn.style.display = "";
+    } else {
+      hintEl.style.display = "none";
+      btn.style.display = "none";
+    }
+  }
+
+  // Tokenizes into alternating "word" and "whitespace" chunks so that
+  // reconstructing either side from the diff ops reproduces the original
+  // text exactly, spacing and line breaks included.
+  function tokenizeForDiff(text) {
+    return text.match(/\S+|\s+/g) || [];
+  }
+  function isWhitespaceToken(tok) { return /^\s+$/.test(tok); }
+
+  // Myers' shortest-edit-script algorithm (the standard diff algorithm),
+  // bounded by maxD so two wildly unrelated texts can't hang the tab: cost
+  // is roughly O(maxD²) regardless of text length, so a low bound keeps
+  // the worst case (pasting two unrelated texts by mistake) fast, while
+  // real edits — small D relative to text length — always finish well
+  // under it and get the full detailed diff.
+  function shortestEditTrace(a, b, maxD) {
+    const n = a.length, m = b.length;
+    const max = Math.min(n + m, maxD);
+    let v = { 1: 0 };
+    const trace = [];
+    for (let d = 0; d <= max; d++) {
+      trace.push(Object.assign({}, v));
+      for (let k = -d; k <= d; k += 2) {
+        let x;
+        if (k === -d || (k !== d && (v[k - 1] ?? -1) < (v[k + 1] ?? -1))) {
+          x = v[k + 1];
+        } else {
+          x = v[k - 1] + 1;
+        }
+        let y = x - k;
+        while (x < n && y < m && a[x] === b[y]) { x++; y++; }
+        v[k] = x;
+        if (x >= n && y >= m) return { trace, converged: true };
+      }
+    }
+    return { trace: null, converged: false };
+  }
+
+  function backtrackDiff(a, b, trace) {
+    let x = a.length, y = b.length;
+    const ops = [];
+    for (let d = trace.length - 1; d >= 0; d--) {
+      const v = trace[d];
+      const k = x - y;
+      let prevK;
+      if (k === -d || (k !== d && (v[k - 1] ?? -1) < (v[k + 1] ?? -1))) {
+        prevK = k + 1;
+      } else {
+        prevK = k - 1;
+      }
+      const prevX = v[prevK];
+      const prevY = prevX - prevK;
+      while (x > prevX && y > prevY) {
+        ops.push({ op: "equal", token: a[x - 1] });
+        x--; y--;
+      }
+      if (d > 0) {
+        if (x === prevX) {
+          ops.push({ op: "ins", token: b[y - 1] });
+          y--;
+        } else {
+          ops.push({ op: "del", token: a[x - 1] });
+          x--;
+        }
+      }
+    }
+    ops.reverse();
+    return ops;
+  }
+
+  // Cheap fallback similarity (word multiset overlap, O(N)) for when the
+  // two texts are too different to diff in full detail within DIFF_MAX_D.
+  function coarseSimilarity(wordsA, wordsB) {
+    const counts = new Map();
+    for (const w of wordsA) counts.set(w, (counts.get(w) || 0) + 1);
+    let common = 0;
+    for (const w of wordsB) {
+      const c = counts.get(w) || 0;
+      if (c > 0) { common++; counts.set(w, c - 1); }
+    }
+    const total = wordsA.length + wordsB.length;
+    return total > 0 ? Math.round((2 * common * 100) / total) : 100;
+  }
+
+  // Computes the diff between textA and textB. Returns one of:
+  //   { ok:false, reason:"empty"|"too_long" }
+  //   { ok:true, detailed:false, similarity }                (too different)
+  //   { ok:true, detailed:true, ops, similarity, added, removed, unchanged }
+  function computeTextDiff(textA, textB) {
+    if (!textA.trim() && !textB.trim()) return { ok: false, reason: "empty" };
+    const tokensA = tokenizeForDiff(textA);
+    const tokensB = tokenizeForDiff(textB);
+    if (tokensA.length + tokensB.length > DIFF_TOKEN_CAP) {
+      return { ok: false, reason: "too_long" };
+    }
+    const wordsA = tokensA.filter(tok => !isWhitespaceToken(tok));
+    const wordsB = tokensB.filter(tok => !isWhitespaceToken(tok));
+    const { trace, converged } = shortestEditTrace(tokensA, tokensB, DIFF_MAX_D);
+    if (!converged) {
+      return { ok: true, detailed: false, similarity: coarseSimilarity(wordsA, wordsB) };
+    }
+    const ops = backtrackDiff(tokensA, tokensB, trace);
+    let added = 0, removed = 0, unchanged = 0;
+    for (const op of ops) {
+      if (isWhitespaceToken(op.token)) continue;
+      if (op.op === "ins") added++;
+      else if (op.op === "del") removed++;
+      else unchanged++;
+    }
+    const totalWords = wordsA.length + wordsB.length;
+    const similarity = totalWords > 0 ? Math.round((2 * unchanged * 100) / totalWords) : 100;
+    return { ok: true, detailed: true, ops, similarity, added, removed, unchanged };
+  }
+
+  // Builds a DOM fragment from the diff ops via plain DOM calls (never
+  // innerHTML), since the tokens are arbitrary user text.
+  //   side === "left"  -> equal + del  (reconstructs text A, del highlighted)
+  //   side === "right" -> equal + ins  (reconstructs text B, ins highlighted)
+  //   side === null    -> unified: equal + del + ins, inline, in edit order
+  function buildDiffFragment(ops, side) {
+    const frag = document.createDocumentFragment();
+    for (const op of ops) {
+      if (side === "left" && op.op === "ins") continue;
+      if (side === "right" && op.op === "del") continue;
+      if (op.op === "equal") {
+        frag.appendChild(document.createTextNode(op.token));
+      } else if (op.op === "del") {
+        const el = document.createElement("del");
+        el.className = "cmp-del";
+        el.textContent = op.token;
+        frag.appendChild(el);
+      } else {
+        const el = document.createElement("ins");
+        el.className = "cmp-ins";
+        el.textContent = op.token;
+        frag.appendChild(el);
+      }
+    }
+    return frag;
+  }
+
+  function renderCompareViews() {
+    const t = STR[lang];
+    const sideA = $("compareSideA"), sideB = $("compareSideB"), unified = $("compareUnifiedView");
+    if (!sideA || !sideB || !unified) return;
+    [sideA, sideB, unified].forEach(el => { el.textContent = ""; el.dataset.empty = t.compareViewEmpty; });
+    if (!lastCompareDiff || !lastCompareDiff.detailed) return;
+    sideA.appendChild(buildDiffFragment(lastCompareDiff.ops, "left"));
+    sideB.appendChild(buildDiffFragment(lastCompareDiff.ops, "right"));
+    unified.appendChild(buildDiffFragment(lastCompareDiff.ops, null));
+  }
+
+  function renderCompareSummary() {
+    const t = STR[lang];
+    const el = $("compareSummary");
+    if (!el || !lastCompareDiff) return;
+    el.textContent = "";
+    const pctSpan = document.createElement("span");
+    pctSpan.className = "pct";
+    pctSpan.textContent = t.compareSummaryPct(lastCompareDiff.similarity);
+    el.appendChild(pctSpan);
+    el.appendChild(document.createTextNode(" "));
+    const noteSpan = document.createElement("span");
+    noteSpan.textContent = lastCompareDiff.detailed
+      ? t.compareSummaryCounts(lastCompareDiff.added, lastCompareDiff.removed, lastCompareDiff.unchanged)
+      : t.compareTooDifferent;
+    el.appendChild(noteSpan);
+  }
+
+  function setCompareView(view) {
+    const sideBtn = $("compareViewSideBtn"), unifiedBtn = $("compareViewUnifiedBtn");
+    const sideView = $("compareSideView"), unifiedView = $("compareUnifiedView");
+    if (!sideBtn || !unifiedBtn || !sideView || !unifiedView) return;
+    const isSide = view !== "unified";
+    sideBtn.classList.toggle("active", isSide);
+    unifiedBtn.classList.toggle("active", !isSide);
+    sideView.style.display = isSide ? "" : "none";
+    unifiedView.style.display = isSide ? "none" : "";
+  }
+
+  // Re-renders the currently-shown result (summary + both views) in the
+  // active language and view mode, without recomputing the diff — so
+  // switching language mid-review doesn't lose your comparison.
+  function refreshCompareResultLabels() {
+    if (!lastCompareDiff) return;
+    renderCompareSummary();
+    renderCompareViews();
+  }
+
+  function runTextCompare() {
+    const t = STR[lang];
+    const statusEl = $("compareStatus");
+    const resultEl = $("compareResult");
+    if (!statusEl || !resultEl) return;
+    const textA = $("compareTextA").value;
+    const textB = $("compareTextB").value;
+    const diff = computeTextDiff(textA, textB);
+    if (!diff.ok) {
+      lastCompareDiff = null;
+      resultEl.style.display = "none";
+      statusEl.textContent = diff.reason === "too_long"
+        ? t.compareTooLong(Math.round(DIFF_TOKEN_CAP / 2))
+        : t.compareEmpty;
+      statusEl.className = "status-line err";
+      return;
+    }
+    lastCompareDiff = diff;
+    statusEl.textContent = t.compareDone;
+    statusEl.className = "status-line ok";
+    resultEl.style.display = "";
+    renderCompareSummary();
+    renderCompareViews();
+    const unifiedBtn = $("compareViewUnifiedBtn");
+    setCompareView(unifiedBtn && unifiedBtn.classList.contains("active") ? "unified" : "side");
   }
 
   // ---------------------------------------------------------------------
@@ -2071,6 +2411,30 @@
     $(id).addEventListener("keydown", (e) => {
       if (e.key === "Enter") { e.preventDefault(); addTtsDictionaryEntry(); }
     });
+  });
+
+  // Comparar versiones del texto — wiring
+  $("btnCompareUseEditorA").addEventListener("click", () => { $("compareTextA").value = input.value; });
+  $("btnCompareUseEditorB").addEventListener("click", () => { $("compareTextB").value = input.value; });
+  $("btnCompareRun").addEventListener("click", runTextCompare);
+  $("btnCompareLoadAuto").addEventListener("click", () => {
+    if (!lastEditorSnapshot) return;
+    $("compareTextA").value = lastEditorSnapshot.text;
+    $("compareTextB").value = input.value;
+    runTextCompare();
+  });
+  $("compareViewSideBtn").addEventListener("click", () => setCompareView("side"));
+  $("compareViewUnifiedBtn").addEventListener("click", () => setCompareView("unified"));
+  updateCompareAutoHint();
+
+  // Auto-detects a full-editor paste-replace (select all, then paste) so
+  // the "before" version is ready to compare without having to save it
+  // yourself first — the "paste" event fires before the browser applies
+  // it, so input.value here is still the pre-paste content.
+  input.addEventListener("paste", () => {
+    if (input.value.length > 0 && input.selectionStart === 0 && input.selectionEnd === input.value.length) {
+      recordEditorSnapshot(input.value);
+    }
   });
 
   // PWA service worker (best effort; ignored if unsupported/blocked)
