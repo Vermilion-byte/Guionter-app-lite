@@ -17,5 +17,11 @@ branch → `main` → `/ (root)`. Una vez activado, GitHub te da una URL propia
 
 ## Uso local
 
-Abre `index.html` directamente en el navegador, o instálalo como PWA desde el menú del
-navegador ("Agregar a pantalla de inicio" / "Instalar app").
+**Opción recomendada (Windows):** haz doble clic en `iniciar-guionter.bat`. Levanta un
+servidor local (con Python o Node, lo que tengas instalado) y abre Guionter Lite en tu
+navegador — así el service worker y la instalación como PWA ("Agregar a pantalla de
+inicio" / "Instalar app") funcionan correctamente, algo que el navegador no permite si
+abres el archivo directamente con `file://`.
+
+**Alternativa rápida:** abre `index.html` directamente en el navegador. La app funciona
+igual, pero sin caché sin conexión ni opción de instalarla como app.
