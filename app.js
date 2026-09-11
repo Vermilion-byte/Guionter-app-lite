@@ -37,6 +37,7 @@
       grammarEmpty: "Escribe algo de texto primero.",
       grammarError: "No se pudo conectar con el servicio de revisión (revisa tu conexión a internet). El contador de palabras y el resto de estadísticas siguen funcionando sin conexión.",
       grammarFound: (n) => `Se encontraron ${n} sugerencia(s).`,
+      grammarJumpTo: "Ir a esta parte del texto",
       suggestion: "Sugerencia",
       downloadWord: "Word",
       downloadPdf: "PDF",
@@ -203,6 +204,7 @@
       grammarEmpty: "Write some text first.",
       grammarError: "Could not reach the checking service (check your internet connection). Word counting and the rest of the stats keep working offline.",
       grammarFound: (n) => `${n} suggestion(s) found.`,
+      grammarJumpTo: "Jump to this part of the text",
       suggestion: "Suggestion",
       downloadWord: "Word",
       downloadPdf: "PDF",
@@ -622,9 +624,31 @@
   // ---------------------------------------------------------------------
   // Grammar / spell check (LanguageTool public API)
   // ---------------------------------------------------------------------
+  // Scrolls the main editor into view and selects the given character range
+  // — used so clicking a flagged grammar/spelling issue jumps straight to it
+  // in the text instead of making the user hunt for it manually.
+  function jumpToEditorOffset(start, end) {
+    input.focus();
+    input.setSelectionRange(start, end);
+    input.scrollIntoView({ behavior: "smooth", block: "center" });
+    // Also scroll the textarea's own content so the selection isn't left
+    // above/below the visible area on long texts.
+    const lineIndex = (input.value.slice(0, start).match(/\n/g) || []).length;
+    const lineHeightRaw = parseFloat(getComputedStyle(input).lineHeight);
+    const fontSize = parseFloat(getComputedStyle(input).fontSize) || 16;
+    const lineHeight = Number.isFinite(lineHeightRaw) ? lineHeightRaw : fontSize * 1.4;
+    input.scrollTop = Math.max(0, lineIndex * lineHeight - input.clientHeight / 2);
+  }
+
   async function runGrammarCheck() {
     const t = STR[lang];
-    const text = input.value.trim();
+    const rawValue = input.value;
+    const text = rawValue.trim();
+    // LanguageTool only ever sees the trimmed text, so every match offset it
+    // returns is relative to `text`, not to the untrimmed editor value. This
+    // is exactly how much leading whitespace got stripped, needed to map an
+    // offset back to a real position in the editor.
+    const leadOffset = rawValue.length - rawValue.trimStart().length;
     const status = $("grammarStatus");
     const list = $("grammarList");
     list.innerHTML = "";
@@ -662,6 +686,15 @@
           <div class="ctx">…${before}<mark>${bad}</mark>${after}…</div>
           ${suggestions ? `<div class="suggestions">${t.suggestion}: <b>${escapeHtml(suggestions)}</b></div>` : ""}
         `;
+        div.tabIndex = 0;
+        div.setAttribute("role", "button");
+        div.setAttribute("aria-label", t.grammarJumpTo);
+        const start = leadOffset + m.offset;
+        const end = start + m.length;
+        div.addEventListener("click", () => jumpToEditorOffset(start, end));
+        div.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); jumpToEditorOffset(start, end); }
+        });
         list.appendChild(div);
       });
     } catch (e) {
