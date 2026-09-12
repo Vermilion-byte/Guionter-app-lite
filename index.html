@@ -203,6 +203,52 @@
   }
   .stat .val{font-family:var(--font-mono);font-size:22px;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums;}
   .stat .lbl{font-size:12px;color:var(--text-dim);margin-top:2px;font-weight:600;}
+  .float-stat{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    z-index:500;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:10px 18px 10px 16px;
+    box-shadow:var(--shadow);
+    cursor:pointer;
+    opacity:0;
+    transform:translateY(10px) scale(.96);
+    pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+  }
+  .float-stat.show{
+    opacity:1;
+    transform:translateY(0) scale(1);
+    pointer-events:auto;
+  }
+  .float-stat .float-stat-val{
+    font-family:var(--font-mono);
+    font-size:19px;
+    font-weight:700;
+    letter-spacing:-.01em;
+    font-variant-numeric:tabular-nums;
+    color:var(--accent2);
+  }
+  .float-stat .float-stat-lbl{
+    font-size:11px;
+    color:var(--text-dim);
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .float-stat:hover{border-color:var(--accent);}
+  .float-stat:active{transform:translateY(0) scale(.97);}
+  @media (max-width:860px){
+    .float-stat{right:14px;bottom:14px;padding:9px 14px 9px 12px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .float-stat{transition:opacity .01ms;}
+  }
   .section-title{
     font-family:var(--font-display);
     font-size:15px;
@@ -464,7 +510,7 @@
         <p class="section-title" id="t-statsTitle">Estadísticas</p>
         <div class="stats-grid">
           <div class="stat"><div class="val" id="statWords">0</div><div class="lbl" id="t-words">Palabras</div></div>
-          <div class="stat"><div class="val" id="statChars">0</div><div class="lbl" id="t-chars">Caracteres (con espacios)</div></div>
+          <div class="stat" id="statCharsCard"><div class="val" id="statChars">0</div><div class="lbl" id="t-chars">Caracteres (con espacios)</div></div>
           <div class="stat"><div class="val" id="statCharsNoSpace">0</div><div class="lbl" id="t-charsNoSpace">Caracteres (sin espacios)</div></div>
           <div class="stat"><div class="val" id="statSentences">0</div><div class="lbl" id="t-sentences">Oraciones</div></div>
           <div class="stat"><div class="val" id="statParagraphs">0</div><div class="lbl" id="t-paragraphs">Párrafos</div></div>
@@ -550,6 +596,14 @@
       </div>
     </section>
   </main>
+
+  <!-- Floating character-count badge: appears once the stats card scrolls
+       out of view, so long scripts don't need scrolling back up to check
+       the character count. Click/Enter scrolls back to the stat. -->
+  <div class="float-stat" id="floatCharStat" role="button" tabindex="0" aria-label="Caracteres (con espacios)">
+    <span class="float-stat-val" id="floatCharVal">0</span>
+    <span class="float-stat-lbl" id="floatCharLabel">Caracteres (con espacios)</span>
+  </div>
 
   <!-- Grammar / spellcheck -->
   <section class="card" style="margin-top:18px;">

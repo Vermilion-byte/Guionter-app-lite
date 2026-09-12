@@ -374,6 +374,8 @@
     $("t-statsTitle").textContent = t.statsTitle;
     $("t-words").textContent = t.words;
     $("t-chars").textContent = t.chars;
+    if ($("floatCharLabel")) $("floatCharLabel").textContent = t.chars;
+    if ($("floatCharStat")) $("floatCharStat").setAttribute("aria-label", t.chars);
     $("t-charsNoSpace").textContent = t.charsNoSpace;
     $("t-sentences").textContent = t.sentences;
     $("t-paragraphs").textContent = t.paragraphs;
@@ -606,6 +608,7 @@
     const r = analyze(input.value);
     $("statWords").textContent = r.wordCount.toLocaleString(lang);
     $("statChars").textContent = r.charCount.toLocaleString(lang);
+    if ($("floatCharVal")) $("floatCharVal").textContent = r.charCount.toLocaleString(lang);
     $("statCharsNoSpace").textContent = r.charNoSpace.toLocaleString(lang);
     $("statSentences").textContent = r.sentenceCount.toLocaleString(lang);
     $("statParagraphs").textContent = r.paragraphCount.toLocaleString(lang);
@@ -2477,6 +2480,39 @@
     });
   }
 
+  // ---------------------------------------------------------------------
+  // Floating character-count badge — mirrors the "Caracteres (con
+  // espacios)" stat in a fixed corner once it scrolls out of view, so
+  // long scripts don't require scrolling back up just to check it.
+  // ---------------------------------------------------------------------
+  function setupFloatingCharStat() {
+    const card = $("statCharsCard");
+    const badge = $("floatCharStat");
+    if (!card || !badge) return;
+
+    if (!("IntersectionObserver" in window)) return; // graceful degradation
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          badge.classList.toggle("show", !entry.isIntersecting);
+        }
+      },
+      { threshold: 0 }
+    );
+    io.observe(card);
+
+    const goToStat = () => card.scrollIntoView({ behavior: "smooth", block: "center" });
+    badge.addEventListener("click", goToStat);
+    badge.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        goToStat();
+      }
+    });
+  }
+
   input.value = loadDraft();
   applyTranslations();
+  setupFloatingCharStat();
 })();
