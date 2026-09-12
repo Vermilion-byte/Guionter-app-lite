@@ -21,6 +21,7 @@
       statsTitle: "Estadísticas",
       words: "Palabras",
       chars: "Caracteres (con espacios)",
+      floatCharToggle: "Mostrar contador flotante al bajar",
       charsNoSpace: "Caracteres (sin espacios)",
       sentences: "Oraciones",
       paragraphs: "Párrafos",
@@ -188,6 +189,7 @@
       statsTitle: "Statistics",
       words: "Words",
       chars: "Characters (with spaces)",
+      floatCharToggle: "Show floating counter while scrolling",
       charsNoSpace: "Characters (no spaces)",
       sentences: "Sentences",
       paragraphs: "Paragraphs",
@@ -376,6 +378,7 @@
     $("t-chars").textContent = t.chars;
     if ($("floatCharLabel")) $("floatCharLabel").textContent = t.chars;
     if ($("floatCharStat")) $("floatCharStat").setAttribute("aria-label", t.chars);
+    if ($("t-floatCharToggle")) $("t-floatCharToggle").textContent = t.floatCharToggle;
     $("t-charsNoSpace").textContent = t.charsNoSpace;
     $("t-sentences").textContent = t.sentences;
     $("t-paragraphs").textContent = t.paragraphs;
@@ -2484,23 +2487,63 @@
   // Floating character-count badge — mirrors the "Caracteres (con
   // espacios)" stat in a fixed corner once it scrolls out of view, so
   // long scripts don't require scrolling back up just to check it.
+  // Can be turned off via the "Mostrar contador flotante al bajar" checkbox.
   // ---------------------------------------------------------------------
+  const FLOAT_CHAR_STAT_KEY = "guionter-float-char-stat-enabled";
+
+  function loadFloatCharStatEnabled() {
+    try {
+      const raw = localStorage.getItem(FLOAT_CHAR_STAT_KEY);
+      return raw === null ? true : raw === "1"; // enabled by default
+    } catch (e) {
+      return true;
+    }
+  }
+
+  function saveFloatCharStatEnabled(enabled) {
+    try { localStorage.setItem(FLOAT_CHAR_STAT_KEY, enabled ? "1" : "0"); } catch (e) { /* ignore */ }
+  }
+
   function setupFloatingCharStat() {
     const card = $("statCharsCard");
     const badge = $("floatCharStat");
+    const toggle = $("floatCharToggle");
     if (!card || !badge) return;
 
-    if (!("IntersectionObserver" in window)) return; // graceful degradation
+    const canObserve = "IntersectionObserver" in window;
+    let io = null;
 
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          badge.classList.toggle("show", !entry.isIntersecting);
-        }
-      },
-      { threshold: 0 }
-    );
-    io.observe(card);
+    function enable() {
+      if (!canObserve || io) return;
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            badge.classList.toggle("show", !entry.isIntersecting);
+          }
+        },
+        { threshold: 0 }
+      );
+      io.observe(card);
+    }
+
+    function disable() {
+      if (io) {
+        io.disconnect();
+        io = null;
+      }
+      badge.classList.remove("show");
+    }
+
+    const enabled = loadFloatCharStatEnabled();
+    if (toggle) toggle.checked = enabled;
+    if (enabled) enable(); else disable();
+
+    if (toggle) {
+      toggle.addEventListener("change", () => {
+        saveFloatCharStatEnabled(toggle.checked);
+        if (toggle.checked) enable(); else disable();
+      });
+    }
 
     const goToStat = () => card.scrollIntoView({ behavior: "smooth", block: "center" });
     badge.addEventListener("click", goToStat);
