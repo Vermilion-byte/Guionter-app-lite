@@ -599,6 +599,10 @@
       <div class="card">
         <p class="section-title"><span class="section-title-icon"><svg class="icon" width="14" height="14"><use href="#icon-sparkle"/></svg></span><span class="section-title-text" id="t-titleGenTitle">Generador de títulos</span></p>
         <p class="hint" id="t-titleGenHint" style="margin:0 0 10px;">Escribe un título y conviértelo al formato que necesites, sin tocar tu guion.</p>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <button class="btn primary" id="btnTitleGenerate" type="button">✨ <span id="t-titleGenGenerate">Generar título desde el guion</span></button>
+        </div>
+        <div class="status-line" id="titleGenStatus"></div>
         <input type="text" id="titleGenInput" class="title-gen-input" placeholder="Escribe tu título aquí…">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <button class="btn" id="btnTitleCaseUpper" type="button" title="Ctrl+Alt+U">🔠 <span id="t-titleCaseUpperBtn">MAYÚSCULAS</span></button>

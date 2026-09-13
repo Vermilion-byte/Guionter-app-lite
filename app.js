@@ -94,6 +94,13 @@
       titleGenHint: "Escribe un título y conviértelo al formato que necesites, sin tocar tu guion.",
       titleGenPlaceholder: "Escribe tu título aquí…",
       titleGenCopy: "Copiar",
+      titleGenGenerate: "Generar título desde el guion",
+      titleGenEmpty: "Escribe algo en tu guion primero.",
+      titleGenGenerating: "Generando título…",
+      titleGenAiDone: "✨ Título generado con IA.",
+      titleGenLocalDone: "Sugerencia generada a partir de tu guion (sin IA — agrega tu clave de Gemini en \"Ajustar a un límite de caracteres\" para sugerencias más creativas).",
+      titleGenError: (msg) => `No se pudo generar el título: ${msg}`,
+      titleGenAiErrorFallback: (msg) => `No se pudo conectar con la IA (${msg}). Se generó una sugerencia sin IA en su lugar.`,
       findReplaceTitle: "Buscar y reemplazar",
       findLabel: "Buscar",
       replaceLabel: "Reemplazar con",
@@ -264,6 +271,13 @@
       titleGenHint: "Type a title and convert it to the format you need, without touching your script.",
       titleGenPlaceholder: "Type your title here…",
       titleGenCopy: "Copy",
+      titleGenGenerate: "Generate title from your script",
+      titleGenEmpty: "Write something in your script first.",
+      titleGenGenerating: "Generating title…",
+      titleGenAiDone: "✨ Title generated with AI.",
+      titleGenLocalDone: "Suggestion generated from your script (no AI — add your Gemini key in \"Adjust to a character limit\" for more creative suggestions).",
+      titleGenError: (msg) => `Couldn't generate the title: ${msg}`,
+      titleGenAiErrorFallback: (msg) => `Couldn't reach the AI (${msg}). Generated a suggestion without AI instead.`,
       findReplaceTitle: "Find and replace",
       findLabel: "Find",
       replaceLabel: "Replace with",
@@ -421,6 +435,7 @@
     $("t-titleGenTitle").textContent = t.titleGenTitle;
     $("t-titleGenHint").textContent = t.titleGenHint;
     $("titleGenInput").placeholder = t.titleGenPlaceholder;
+    if ($("t-titleGenGenerate")) $("t-titleGenGenerate").textContent = t.titleGenGenerate;
     $("t-titleCaseUpperBtn").textContent = t.caseUpperBtn;
     $("t-titleCaseLowerBtn").textContent = t.caseLowerBtn;
     $("t-titleCaseTitleBtn").textContent = t.caseTitleBtn;
@@ -1753,6 +1768,75 @@
     }
   }
 
+  // ---------------------------------------------------------------------
+  // Generador de títulos — suggests a title straight from the script in
+  // the main editor (as opposed to the box above it, which only reformats
+  // whatever title the user already typed). Uses the same Gemini key as
+  // the other AI tools when one is set; otherwise falls back to a local,
+  // offline heuristic built on top of summarizeTextLocally() so the button
+  // always produces something.
+  // ---------------------------------------------------------------------
+  function suggestTitleLocally(text) {
+    const TITLE_LEN = 70;
+    const trimmed = text.trim();
+    if (!trimmed) return "";
+    let out;
+    if (trimmed.length <= TITLE_LEN) {
+      out = trimmed;
+    } else {
+      const summary = summarizeTextLocally(trimmed, TITLE_LEN);
+      out = summary.result || trimmed.slice(0, TITLE_LEN);
+    }
+    return out.replace(/[…]+$/, "").replace(/[.!?]+$/, "").trim();
+  }
+
+  function buildTitleGenPrompt(text) {
+    return `Basándote en el siguiente guion, sugiere un único título corto, atractivo y fiel a su contenido o idea principal. Responde ÚNICAMENTE con el título propuesto, sin comillas, sin explicaciones y sin punto final.\n\nGUION:\n${text}`;
+  }
+
+  async function generateTitleFromScript() {
+    const t = STR[lang];
+    const statusEl = $("titleGenStatus");
+    const btn = $("btnTitleGenerate");
+    const titleInput = $("titleGenInput");
+    const full = input.value;
+    if (!full.trim()) {
+      if (statusEl) { statusEl.textContent = t.titleGenEmpty; statusEl.className = "status-line"; }
+      return;
+    }
+
+    const apiKey = (charLimitSettings.geminiKey || "").trim();
+    if (!apiKey) {
+      const suggestion = suggestTitleLocally(full);
+      if (titleInput) titleInput.value = suggestion;
+      if (statusEl) { statusEl.textContent = t.titleGenLocalDone; statusEl.className = "status-line ok"; }
+      return;
+    }
+
+    if (statusEl) { statusEl.textContent = t.titleGenGenerating; statusEl.className = "status-line wait"; }
+    if (btn) btn.disabled = true;
+
+    try {
+      const raw = await callGemini(buildTitleGenPrompt(full), 40, apiKey);
+      const cleaned = raw.replace(/^[\s"'“”]+|[\s"'“”.]+$/g, "").trim();
+      if (titleInput) titleInput.value = cleaned || raw.trim();
+      if (statusEl) { statusEl.textContent = t.titleGenAiDone; statusEl.className = "status-line ok"; }
+    } catch (err) {
+      console.error("Generar título con IA:", err);
+      const message = (err && err.message) || String(err);
+      const suggestion = suggestTitleLocally(full);
+      if (suggestion) {
+        if (titleInput) titleInput.value = suggestion;
+        if (statusEl) { statusEl.textContent = t.titleGenAiErrorFallback(message); statusEl.className = "status-line err"; }
+      } else if (statusEl) {
+        statusEl.textContent = t.titleGenError(message);
+        statusEl.className = "status-line err";
+      }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
   // ---- Persisted settings for the char-limit tool (mode, Gemini key) ----
   const CHAR_LIMIT_KEY = "guionter-char-limit-settings";
   function loadCharLimitSettings() {
@@ -2367,6 +2451,7 @@
 
   // Title generator: same conversions, applied only to its own standalone box.
   const titleGenInput = $("titleGenInput");
+  $("btnTitleGenerate").addEventListener("click", generateTitleFromScript);
   $("btnTitleCaseUpper").addEventListener("click", () => applyCaseConversionTo(titleGenInput, (s) => s.toUpperCase()));
   $("btnTitleCaseLower").addEventListener("click", () => applyCaseConversionTo(titleGenInput, (s) => s.toLowerCase()));
   $("btnTitleCaseTitle").addEventListener("click", () => applyCaseConversionTo(titleGenInput, toTitleCaseText));
