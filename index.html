@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Guionter — Contador de Palabras y Caracteres</title>
 <meta name="description" content="Analiza tus textos: palabras, caracteres, oraciones, párrafos, nivel de lectura, tiempo de lectura y de habla, densidad de palabras clave y corrector ortográfico.">
-<meta name="theme-color" content="#08CB00">
+<meta name="theme-color" content="#235347">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -14,76 +14,76 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    /* neutral paper: light grey, per brand spec */
-    --bg:#EEEEEE;
+    /* brand palette: forest-to-mint green scale */
+    --bg:#DAF1DE;
     --surface:#FFFFFF;
-    --surface-alt:#E4E4E4;
-    --border:#D6D6D6;
-    --text:#000000;
-    --text-dim:#5C6152;
-    /* terminal green: primary accent, per brand spec */
-    --accent:#08CB00;
-    --accent-dim:#E1F5DC;
-    --accent-contrast:#000000;
-    /* dark olive: secondary ink for reading-level / info */
-    --accent2:#253900;
-    --accent2-dim:#E4E8D6;
+    --surface-alt:#EDF6EF;
+    --border:#C8E0CD;
+    --text:#0B2B26;
+    --text-dim:#4C6B60;
+    --accent:#235347;
+    --accent-dim:#E3F0E7;
+    --accent-contrast:#FFFFFF;
+    --accent2:#163832;
+    --accent2-dim:#E7F2E9;
     --good:#1B8A5A;
     --good-dim:#DFF3EA;
     --warn:#B45309;
     --bad:#C0392B;
     --bad-dim:#FBE1DE;
-    --shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.08);
-    --radius:14px;
+    --shadow: 0 2px 6px rgba(11,43,38,.07), 0 18px 40px rgba(11,43,38,.1);
+    --radius:22px;
     --font-display: "Fraunces", Georgia, "Times New Roman", serif;
     --font: "Work Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --bg:#000000;
-      --surface:#14190A;
-      --surface-alt:#1B2210;
-      --border:#2A3418;
-      --text:#EEEEEE;
-      --text-dim:#9BA88F;
-      --accent:#08CB00;
-      --accent-dim:#16240A;
-      --accent-contrast:#000000;
-      --accent2:#B7C98A;
-      --accent2-dim:#212B10;
+      --bg:#051F20;
+      --surface:#0B2B26;
+      --surface-alt:#163832;
+      --border:#235347;
+      --text:#DAF1DE;
+      --text-dim:#8EB69B;
+      --accent:#8EB69B;
+      --accent-dim:#163832;
+      --accent-contrast:#051F20;
+      --accent2:#DAF1DE;
+      --accent2-dim:#163832;
       --good:#3ecf8e;
       --good-dim:#12291F;
       --warn:#e0a94f;
       --bad:#E2694F;
       --bad-dim:#2E1712;
-      --shadow: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.55);
+      --shadow: 0 2px 6px rgba(0,0,0,.45), 0 18px 40px rgba(0,0,0,.5);
     }
   }
   :root[data-theme="dark"]{
-    --bg:#000000;
-    --surface:#14190A;
-    --surface-alt:#1B2210;
-    --border:#2A3418;
-    --text:#EEEEEE;
-    --text-dim:#9BA88F;
-    --accent:#08CB00;
-    --accent-dim:#16240A;
-    --accent-contrast:#000000;
-    --accent2:#B7C98A;
-    --accent2-dim:#212B10;
+    --bg:#051F20;
+    --surface:#0B2B26;
+    --surface-alt:#163832;
+    --border:#235347;
+    --text:#DAF1DE;
+    --text-dim:#8EB69B;
+    --accent:#8EB69B;
+    --accent-dim:#163832;
+    --accent-contrast:#051F20;
+    --accent2:#DAF1DE;
+    --accent2-dim:#163832;
     --good:#3ecf8e;
     --good-dim:#12291F;
     --warn:#e0a94f;
     --bad:#E2694F;
     --bad-dim:#2E1712;
-    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.55);
+    --shadow: 0 2px 6px rgba(0,0,0,.45), 0 18px 40px rgba(0,0,0,.5);
   }
   *{box-sizing:border-box;}
   html,body{height:100%;}
   body{
     margin:0;
-    background:var(--bg);
+    background:
+      radial-gradient(ellipse 1100px 700px at 50% -8%, color-mix(in srgb, var(--accent) 12%, var(--bg)), transparent 60%),
+      var(--bg);
     color:var(--text);
     font-family:var(--font);
     -webkit-font-smoothing:antialiased;
@@ -120,7 +120,7 @@
     background:var(--surface);
     color:var(--text);
     padding:8px 13px;
-    border-radius:10px;
+    border-radius:14px;
     font-size:13px;
     font-weight:600;
     cursor:pointer;
@@ -136,6 +136,7 @@
     background:var(--accent);
     border-color:var(--accent);
     color:var(--accent-contrast);
+    border-radius:999px;
   }
   .btn.primary:hover{filter:brightness(1.05);}
   .btn:disabled{opacity:.5;cursor:default;}
@@ -144,7 +145,7 @@
     background:var(--surface);
     color:var(--text);
     padding:8px 10px;
-    border-radius:10px;
+    border-radius:14px;
     font-size:13px;
     font-weight:600;
   }
@@ -162,7 +163,7 @@
     border:1px solid var(--border);
     border-radius:var(--radius);
     box-shadow:var(--shadow);
-    padding:16px;
+    padding:20px;
   }
   .editor-card{padding:0;overflow:hidden;display:flex;flex-direction:column;}
   .editor-toolbar{
@@ -190,6 +191,23 @@
     outline:none;
   }
   textarea#input::placeholder{color:var(--text-dim);}
+  .icon{display:block;}
+  .stat-hero{
+    background:var(--accent);
+    color:var(--accent-contrast);
+    border-radius:18px;
+    padding:18px 20px;
+    margin-bottom:12px;
+  }
+  .stat-hero-icon{
+    width:32px;height:32px;border-radius:50%;
+    background:color-mix(in srgb, var(--accent-contrast) 20%, transparent);
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:12px;
+  }
+  .stat-hero-icon .icon{color:var(--accent-contrast);}
+  .stat-hero-val{font-family:var(--font-mono);font-size:38px;font-weight:700;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums;}
+  .stat-hero-lbl{font-size:12px;font-weight:700;margin-top:6px;opacity:.85;text-transform:uppercase;letter-spacing:.04em;}
   .stats-grid{
     display:grid;
     grid-template-columns:repeat(2,1fr);
@@ -198,10 +216,20 @@
   .stat{
     background:var(--surface-alt);
     border:1px solid var(--border);
-    border-radius:12px;
-    padding:12px 14px;
+    border-radius:16px;
+    padding:14px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
   }
-  .stat .val{font-family:var(--font-mono);font-size:22px;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums;}
+  .stat-icon-chip{
+    width:24px;height:24px;border-radius:50%;
+    background:var(--accent-dim);
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:6px;
+  }
+  .stat-icon-chip .icon{color:var(--accent2);}
+  .stat .val{font-family:var(--font-mono);font-size:22px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--text);}
   .stat .lbl{font-size:12px;color:var(--text-dim);margin-top:2px;font-weight:600;}
   .float-stat{
     position:fixed;
@@ -250,11 +278,23 @@
     .float-stat{transition:opacity .01ms;}
   }
   .section-title{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    margin:0 0 12px;
+  }
+  .section-title-icon{
+    width:26px;height:26px;border-radius:50%;
+    background:var(--accent-dim);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .section-title-icon .icon{color:var(--accent2);}
+  .section-title-text{
     font-family:var(--font-display);
     font-size:15px;
     color:var(--text);
     font-weight:600;
-    margin:0 0 10px;
   }
   .readlevel-box{
     display:flex;
@@ -263,7 +303,7 @@
     padding:12px 14px;
     background:var(--surface-alt);
     border:1px solid var(--border);
-    border-radius:12px;
+    border-radius:16px;
   }
   .readlevel-badge{
     font-family:var(--font-mono);
@@ -300,7 +340,7 @@
   }
   .grammar-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;}
   .grammar-item{
-    background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;
+    background:var(--surface-alt);border:1px solid var(--border);border-radius:14px;
     padding:10px 12px;font-size:13px;cursor:pointer;
   }
   .grammar-item:hover, .grammar-item:focus-visible{border-color:var(--accent);background:var(--accent-dim);outline:none;}
@@ -310,12 +350,12 @@
   .grammar-item .suggestions{margin-top:5px;font-size:12.5px;}
   .grammar-item .suggestions b{color:var(--good);}
   .status-line{font-size:12.5px;color:var(--text-dim);margin-top:8px;}
-  details#scriptLibrary{border:1px solid var(--border);border-radius:12px;padding:10px 14px;background:var(--surface-alt);margin:0 14px 10px;}
+  details#scriptLibrary{border:1px solid var(--border);border-radius:16px;padding:10px 14px;background:var(--surface-alt);margin:0 14px 10px;}
   details#scriptLibrary summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--text);list-style:none;}
   details#scriptLibrary summary::-webkit-details-marker{display:none;}
   details#scriptLibrary summary::before{content:"▸ ";color:var(--accent);}
   details#scriptLibrary[open] summary::before{content:"▾ ";}
-  details#ttsDictionary{border:1px solid var(--border);border-radius:12px;padding:10px 14px;background:var(--surface-alt);}
+  details#ttsDictionary{border:1px solid var(--border);border-radius:16px;padding:10px 14px;background:var(--surface-alt);}
   details#ttsDictionary summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--text);list-style:none;}
   details#ttsDictionary summary::-webkit-details-marker{display:none;}
   details#ttsDictionary summary::before{content:"▸ ";color:var(--accent);}
@@ -323,28 +363,40 @@
   .tts-dict-item{
     display:flex;align-items:center;justify-content:space-between;gap:10px;
     padding:6px 10px;background:var(--surface);border:1px solid var(--border);
-    border-radius:8px;margin-top:6px;font-size:13px;
+    border-radius:16px;margin-top:6px;font-size:13px;
   }
   .tts-dict-pair{font-weight:600;}
   .tts-dict-remove{
     background:none;border:none;color:var(--text-dim);cursor:pointer;
-    font-size:14px;padding:2px 7px;border-radius:6px;line-height:1;
+    font-size:14px;padding:2px 7px;border-radius:14px;line-height:1;
   }
   .tts-dict-remove:hover{color:var(--bad);background:var(--border);}
   .tts-dict-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
   .tts-dict-field{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--text-dim);flex:1 1 220px;min-width:200px;}
   .tts-dict-field input[type="text"], .tts-dict-field select{
     border:1px solid var(--border);background:var(--surface-alt);color:var(--text);
-    padding:8px 10px;border-radius:8px;font-size:13px;font-family:var(--font);
+    padding:8px 10px;border-radius:16px;font-size:13px;font-family:var(--font);
   }
   .status-line.ok{color:var(--good);font-weight:700;}
   .status-line.err{color:var(--bad);font-weight:700;}
-  .goal-progress-track{width:100%;height:10px;border-radius:6px;background:var(--surface-alt);border:1px solid var(--border);overflow:hidden;}
+  .goal-progress-track{width:100%;height:12px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--border);overflow:hidden;}
   .goal-progress-fill{height:100%;width:0%;background:var(--accent);transition:width .25s ease, background-color .2s ease;}
   .goal-progress-fill.over{background:var(--bad);}
+  .goal-ring-wrap{position:relative;width:120px;height:120px;margin:6px auto 16px;}
+  .goal-ring{transform:rotate(-90deg);}
+  .goal-ring-track{fill:none;stroke:var(--surface-alt);stroke-width:10;}
+  .goal-ring-fill{
+    fill:none;stroke:var(--accent);stroke-width:10;stroke-linecap:round;
+    stroke-dasharray:326.7;stroke-dashoffset:326.7;
+    transition:stroke-dashoffset .3s ease, stroke .2s ease;
+  }
+  .goal-ring-fill.over{stroke:var(--bad);}
+  .goal-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .goal-ring-value{font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.01em;font-variant-numeric:tabular-nums;}
+  .goal-ring-label{font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
   .title-gen-input{
     width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--surface-alt);
-    color:var(--text);padding:8px 10px;border-radius:8px;font-size:13px;font-family:var(--font);margin-bottom:10px;
+    color:var(--text);padding:8px 10px;border-radius:16px;font-size:13px;font-family:var(--font);margin-bottom:10px;
   }
   .footer-note{
     margin-top:26px;font-size:12px;color:var(--text-dim);text-align:center;line-height:1.6;
@@ -352,11 +404,11 @@
   .compare-textarea{
     width:100%;box-sizing:border-box;min-height:160px;resize:vertical;
     border:1px solid var(--border);background:var(--surface-alt);color:var(--text);
-    padding:10px 12px;border-radius:8px;font-size:13.5px;line-height:1.55;font-family:var(--font);
+    padding:10px 12px;border-radius:16px;font-size:13.5px;line-height:1.55;font-family:var(--font);
   }
   .compare-textarea::placeholder{color:var(--text-dim);}
   .compare-view-box{
-    border:1px solid var(--border);background:var(--surface-alt);border-radius:8px;
+    border:1px solid var(--border);background:var(--surface-alt);border-radius:16px;
     padding:12px 14px;font-size:13.5px;line-height:1.65;white-space:pre-wrap;word-wrap:break-word;
     max-height:420px;overflow-y:auto;
   }
@@ -372,15 +424,34 @@
 </style>
 </head>
 <body>
+<svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;">
+  <defs>
+    <symbol id="icon-words" viewBox="0 0 24 24"><path d="M4 6h16M4 12h11M4 18h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="icon-chars" viewBox="0 0 24 24"><path d="M9 4h6M12 4v16M9 20h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-charsnospace" viewBox="0 0 24 24"><circle cx="6.5" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="17.5" cy="12" r="1.7" fill="currentColor"/></symbol>
+    <symbol id="icon-sentences" viewBox="0 0 24 24"><path d="M4 12h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="19.5" cy="12" r="1.7" fill="currentColor"/></symbol>
+    <symbol id="icon-paragraphs" viewBox="0 0 24 24"><path d="M9 4h9M9 4v16M9 4a4 4 0 1 0 0 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3.2 1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-speak" viewBox="0 0 24 24"><path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/><path d="M16.2 8.8a5 5 0 0 1 0 6.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M19 6.2a8.6 8.6 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="icon-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z" fill="currentColor"/></symbol>
+    <symbol id="icon-barchart" viewBox="0 0 24 24"><path d="M5 19V10M12 19V5M19 19v-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="icon-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="1" fill="currentColor"/></symbol>
+    <symbol id="icon-brackets" viewBox="0 0 24 24"><path d="M8 4H5v16h3M16 4h3v16h-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-gauge" viewBox="0 0 24 24"><path d="M4 16a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 16l4-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="icon-hash" viewBox="0 0 24 24"><path d="M5 9h14M5 15h14M9.5 4l-2 16M16.5 4l-2 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8.5 12.3l2.4 2.4 4.6-5.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-compare" viewBox="0 0 24 24"><rect x="4" y="6" width="10" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="10" y="4" width="10" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  </defs>
+</svg>
 <div class="app">
 
   <header class="top">
     <div class="brand">
       <div class="logo" aria-hidden="true">
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <rect x="0" y="0" width="100" height="100" rx="22" fill="#08CB00"/>
-          <text x="50" y="66" font-family="Fraunces, Georgia, serif" font-weight="700" font-size="56" fill="#000000" text-anchor="middle">G</text>
-          <rect x="32" y="71" width="36" height="6.5" rx="3.25" fill="#000000"/>
+          <rect x="0" y="0" width="100" height="100" rx="26" fill="#235347"/>
+          <text x="50" y="66" font-family="Fraunces, Georgia, serif" font-weight="700" font-size="56" fill="#FFFFFF" text-anchor="middle">G</text>
+          <rect x="32" y="71" width="36" height="6.5" rx="3.25" fill="#DAF1DE"/>
         </svg>
       </div>
       <div>
@@ -494,7 +565,7 @@
     <section style="display:flex;flex-direction:column;gap:14px;">
       <!-- Title case-conversion tool: standalone box, independent of the main editor -->
       <div class="card">
-        <p class="section-title" id="t-titleGenTitle">Generador de títulos</p>
+        <p class="section-title"><span class="section-title-icon"><svg class="icon" width="14" height="14"><use href="#icon-sparkle"/></svg></span><span class="section-title-text" id="t-titleGenTitle">Generador de títulos</span></p>
         <p class="hint" id="t-titleGenHint" style="margin:0 0 10px;">Escribe un título y conviértelo al formato que necesites, sin tocar tu guion.</p>
         <input type="text" id="titleGenInput" class="title-gen-input" placeholder="Escribe tu título aquí…">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -507,15 +578,37 @@
       </div>
 
       <div class="card">
-        <p class="section-title" id="t-statsTitle">Estadísticas</p>
+        <p class="section-title"><span class="section-title-icon"><svg class="icon" width="14" height="14"><use href="#icon-barchart"/></svg></span><span class="section-title-text" id="t-statsTitle">Estadísticas</span></p>
+        <div class="stat-hero" id="statCharsCard">
+          <div class="stat-hero-icon"><svg class="icon" width="18" height="18"><use href="#icon-chars"/></svg></div>
+          <div class="stat-hero-val" id="statChars">0</div>
+          <div class="stat-hero-lbl" id="t-chars">Caracteres (con espacios)</div>
+        </div>
         <div class="stats-grid">
-          <div class="stat"><div class="val" id="statWords">0</div><div class="lbl" id="t-words">Palabras</div></div>
-          <div class="stat" id="statCharsCard"><div class="val" id="statChars">0</div><div class="lbl" id="t-chars">Caracteres (con espacios)</div></div>
-          <div class="stat"><div class="val" id="statCharsNoSpace">0</div><div class="lbl" id="t-charsNoSpace">Caracteres (sin espacios)</div></div>
-          <div class="stat"><div class="val" id="statSentences">0</div><div class="lbl" id="t-sentences">Oraciones</div></div>
-          <div class="stat"><div class="val" id="statParagraphs">0</div><div class="lbl" id="t-paragraphs">Párrafos</div></div>
-          <div class="stat"><div class="val" id="statReadTime">0 s</div><div class="lbl" id="t-readTime">Tiempo de lectura</div></div>
-          <div class="stat"><div class="val" id="statSpeakTime">0 s</div><div class="lbl" id="t-speakTime">Tiempo de habla</div></div>
+          <div class="stat">
+            <div class="stat-icon-chip"><svg class="icon" width="14" height="14"><use href="#icon-words"/></svg></div>
+            <div class="val" id="statWords">0</div><div class="lbl" id="t-words">Palabras</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon-chip"><svg class="icon" width="14" height="14"><use href="#icon-charsnospace"/></svg></div>
+            <div class="val" id="statCharsNoSpace">0</div><div class="lbl" id="t-charsNoSpace">Caracteres (sin espacios)</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon-chip"><svg class="icon" width="14" height="14"><use href="#icon-sentences"/></svg></div>
+            <div class="val" id="statSentences">0</div><div class="lbl" id="t-sentences">Oraciones</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon-chip"><svg class="icon" width="14" height="14"><use href="#icon-paragraphs"/></svg></div>
+            <div class="val" id="statParagraphs">0</div><div class="lbl" id="t-paragraphs">Párrafos</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon-chip"><svg class="icon" width="14" height="14"><use href="#icon-clock"/></svg></div>
+            <div class="val" id="statReadTime">0 s</div><div class="lbl" id="t-readTime">Tiempo de lectura</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon-chip"><svg class="icon" width="14" height="14"><use href="#icon-speak"/></svg></div>
+            <div class="val" id="statSpeakTime">0 s</div><div class="lbl" id="t-speakTime">Tiempo de habla</div>
+          </div>
         </div>
         <label class="check-row" style="margin:10px 0 0;">
           <input type="checkbox" id="floatCharToggle" checked>
@@ -525,7 +618,7 @@
 
       <!-- Goal tracker: a target (words or spoken duration) with a live progress bar -->
       <div class="card">
-        <p class="section-title" id="t-goalTitle">Meta del guion</p>
+        <p class="section-title"><span class="section-title-icon"><svg class="icon" width="14" height="14"><use href="#icon-target"/></svg></span><span class="section-title-text" id="t-goalTitle">Meta del guion</span></p>
         <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px;">
           <label class="tts-dict-field" style="flex:1 1 140px;min-width:130px;">
             <span id="t-goalUnitLabel">Medir en</span>
@@ -543,13 +636,23 @@
             <input type="text" id="goalDurationInput" placeholder="Ej: 5:00">
           </label>
         </div>
+        <div class="goal-ring-wrap">
+          <svg class="goal-ring" viewBox="0 0 120 120" width="120" height="120" aria-hidden="true">
+            <circle class="goal-ring-track" cx="60" cy="60" r="52"/>
+            <circle class="goal-ring-fill" id="goalRingFill" cx="60" cy="60" r="52"/>
+          </svg>
+          <div class="goal-ring-center">
+            <div class="goal-ring-value" id="goalRingValue">—</div>
+            <div class="goal-ring-label" id="t-goalRingLabel">Meta</div>
+          </div>
+        </div>
         <div class="goal-progress-track"><div class="goal-progress-fill" id="goalProgressFill"></div></div>
         <p class="status-line" id="goalStatus" style="margin-top:8px;"></p>
       </div>
 
       <!-- Ajustar a un límite de caracteres: trim, local summary, or AI summary -->
       <div class="card">
-        <p class="section-title" id="t-charLimitTitle">Ajustar a un límite de caracteres</p>
+        <p class="section-title"><span class="section-title-icon"><svg class="icon" width="14" height="14"><use href="#icon-brackets"/></svg></span><span class="section-title-text" id="t-charLimitTitle">Ajustar a un límite de caracteres</span></p>
         <p class="hint" id="t-charLimitHint" style="margin:0 0 10px;">Escribe el máximo de caracteres permitido y elige cómo quieres llegar a él.</p>
         <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px;">
           <label class="tts-dict-field" style="flex:1 1 140px;min-width:130px;">
@@ -572,12 +675,12 @@
           </label>
           <p class="hint" id="t-charLimitAiKeyHint" style="margin:0;">Consíguela gratis en aistudio.google.com/apikey (no requiere tarjeta).</p>
         </div>
-        <button class="btn" id="btnCharLimitApply" type="button"><span id="t-charLimitApply">Aplicar</span></button>
+        <button class="btn primary" id="btnCharLimitApply" type="button"><span id="t-charLimitApply">Aplicar</span></button>
         <p class="status-line" id="charLimitStatus" style="margin-top:8px;"></p>
       </div>
 
       <div class="card">
-        <p class="section-title" id="t-readLevelTitle">Nivel de lectura</p>
+        <p class="section-title"><span class="section-title-icon"><svg class="icon" width="14" height="14"><use href="#icon-gauge"/></svg></span><span class="section-title-text" id="t-readLevelTitle">Nivel de lectura</span></p>
         <div class="readlevel-box">
           <span class="readlevel-badge" id="readLevelBadge">—</span>
           <span class="readlevel-detail" id="readLevelDetail">—</span>
@@ -586,7 +689,7 @@
 
       <!-- Keyword density -->
       <div class="card">
-        <p class="section-title" id="t-kwTitle">Densidad de palabras clave</p>
+        <p class="section-title"><span class="section-title-icon"><svg class="icon" width="14" height="14"><use href="#icon-hash"/></svg></span><span class="section-title-text" id="t-kwTitle">Densidad de palabras clave</span></p>
         <label class="check-row">
           <input type="checkbox" id="excludeCommon" checked>
           <span id="t-excludeCommon">Excluir palabras comunes (el, la, de, and, the…)</span>
@@ -611,7 +714,7 @@
 
   <!-- Grammar / spellcheck -->
   <section class="card" style="margin-top:18px;">
-    <p class="section-title" id="t-grammarTitle">Corrector ortográfico y gramatical</p>
+    <p class="section-title"><span class="section-title-icon"><svg class="icon" width="14" height="14"><use href="#icon-check"/></svg></span><span class="section-title-text" id="t-grammarTitle">Corrector ortográfico y gramatical</span></p>
     <p class="empty-hint" id="t-grammarHint" style="margin-bottom:10px;">
       El subrayado rojo del cuadro de texto ya corrige ortografía automáticamente (usa el corrector de tu navegador/sistema). Para un análisis más completo (gramática, estilo) usa el botón de abajo — necesita conexión a internet.
     </p>
@@ -622,7 +725,7 @@
 
   <!-- Compare two versions of the text: side-by-side / unified diff -->
   <section class="card" style="margin-top:18px;" id="compareCard">
-    <p class="section-title" id="t-compareTitle">Comparar versiones del texto</p>
+    <p class="section-title"><span class="section-title-icon"><svg class="icon" width="14" height="14"><use href="#icon-compare"/></svg></span><span class="section-title-text" id="t-compareTitle">Comparar versiones del texto</span></p>
     <p class="empty-hint" id="t-compareHint" style="margin-bottom:12px;">
       Compara dos versiones de tu guion: qué tan parecidas son, qué se agregó y qué se eliminó, resaltado como si fueran dos páginas una al lado de otra.
     </p>

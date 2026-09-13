@@ -125,6 +125,7 @@
       charLimitAiDone: (before, after, limit) => `Resumen con IA: de ${before} a ${after} caracteres (límite: ${limit}).`,
       charLimitAiError: (msg) => `No se pudo generar el resumen con IA: ${msg}`,
       goalTitle: "Meta del guion",
+      goalRingLabel: "Meta",
       goalUnitLabel: "Medir en",
       goalUnitWords: "Palabras",
       goalUnitDuration: "Duración hablada",
@@ -293,6 +294,7 @@
       charLimitAiDone: (before, after, limit) => `AI summary: from ${before} to ${after} characters (limit: ${limit}).`,
       charLimitAiError: (msg) => `Couldn't generate the AI summary: ${msg}`,
       goalTitle: "Script goal",
+      goalRingLabel: "Goal",
       goalUnitLabel: "Measure in",
       goalUnitWords: "Words",
       goalUnitDuration: "Spoken duration",
@@ -440,6 +442,7 @@
     $("t-charLimitAiKeyLabel").textContent = t.charLimitAiKeyLabel;
     $("t-charLimitAiKeyHint").textContent = t.charLimitAiKeyHint;
     $("t-goalTitle").textContent = t.goalTitle;
+    if ($("t-goalRingLabel")) $("t-goalRingLabel").textContent = t.goalRingLabel;
     $("t-goalUnitLabel").textContent = t.goalUnitLabel;
     $("t-goalUnitWords").textContent = t.goalUnitWords;
     $("t-goalUnitDuration").textContent = t.goalUnitDuration;
@@ -1906,6 +1909,28 @@
     $("goalDurationField").style.display = isDuration ? "flex" : "none";
   }
 
+  const GOAL_RING_CIRCUMFERENCE = 2 * Math.PI * 52;
+
+  // Drives the circular goal-progress ring (a visual companion to the linear
+  // #goalProgressFill bar, which stays untouched for anything that already
+  // depends on it): sets the arc's stroke-dashoffset from a 0-100 percentage
+  // and shows that same percentage as the number in the ring's center.
+  function updateGoalRing(pct, over, hasTarget) {
+    const ringFill = $("goalRingFill");
+    const ringValue = $("goalRingValue");
+    if (!ringFill || !ringValue) return;
+    if (!hasTarget) {
+      ringFill.style.strokeDashoffset = String(GOAL_RING_CIRCUMFERENCE);
+      ringFill.classList.remove("over");
+      ringValue.textContent = "—";
+      return;
+    }
+    const clamped = Math.max(0, Math.min(100, pct));
+    ringFill.style.strokeDashoffset = String(GOAL_RING_CIRCUMFERENCE * (1 - clamped / 100));
+    ringFill.classList.toggle("over", over);
+    ringValue.textContent = `${Math.round(clamped)}%`;
+  }
+
   function updateGoalProgress(r) {
     const t = STR[lang];
     const fill = $("goalProgressFill");
@@ -1916,6 +1941,7 @@
       fill.style.width = "0%";
       fill.classList.remove("over");
       status.textContent = t.goalNoTarget;
+      updateGoalRing(0, false, false);
       return;
     }
     const current = isDuration ? r.speakSeconds : r.wordCount;
@@ -1923,6 +1949,7 @@
     fill.style.width = `${Math.min(100, pct)}%`;
     const over = current > target;
     fill.classList.toggle("over", over);
+    updateGoalRing(pct, over, true);
     const diff = Math.abs(current - target);
     if (isDuration) {
       status.textContent = over
