@@ -124,6 +124,7 @@
       charLimitAiWorking: "Generando resumen con IA…",
       charLimitAiDone: (before, after, limit) => `Resumen con IA: de ${before} a ${after} caracteres (límite: ${limit}).`,
       charLimitAiError: (msg) => `No se pudo generar el resumen con IA: ${msg}`,
+      eyebrowBadge: "IA integrada",
       goalTitle: "Meta del guion",
       goalRingLabel: "Meta",
       goalUnitLabel: "Medir en",
@@ -293,6 +294,7 @@
       charLimitAiWorking: "Generating AI summary…",
       charLimitAiDone: (before, after, limit) => `AI summary: from ${before} to ${after} characters (limit: ${limit}).`,
       charLimitAiError: (msg) => `Couldn't generate the AI summary: ${msg}`,
+      eyebrowBadge: "AI-powered",
       goalTitle: "Script goal",
       goalRingLabel: "Goal",
       goalUnitLabel: "Measure in",
@@ -443,6 +445,7 @@
     $("t-charLimitAiKeyHint").textContent = t.charLimitAiKeyHint;
     $("t-goalTitle").textContent = t.goalTitle;
     if ($("t-goalRingLabel")) $("t-goalRingLabel").textContent = t.goalRingLabel;
+    if ($("t-eyebrowBadge")) $("t-eyebrowBadge").textContent = t.eyebrowBadge;
     $("t-goalUnitLabel").textContent = t.goalUnitLabel;
     $("t-goalUnitWords").textContent = t.goalUnitWords;
     $("t-goalUnitDuration").textContent = t.goalUnitDuration;
