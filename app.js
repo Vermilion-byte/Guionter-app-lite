@@ -2772,6 +2772,11 @@
   // esconde cuando el editor vuelve a estar a la vista. Cada flecha se
   // muestra solo si sirve: la de subir si el inicio quedó arriba, la de
   // bajar si el final está más abajo.
+  //
+  // Cada flecha mueve primero el texto DENTRO del cuadro y, si con eso no
+  // basta (el cuadro no tiene barra propia y se sale de la pantalla), mueve
+  // después la página hasta el extremo del texto. Así sirve tanto para leer
+  // el interior del cuadro como para ir al principio o al fin del guion.
   // ---------------------------------------------------------------------
   const FLOAT_NAV_KEY = "guionter-float-nav-enabled";
 
@@ -2837,16 +2842,39 @@
       flashTimer = window.setTimeout(() => editorCard.classList.remove("flash"), 900);
     }
 
-    function goToEditor(edge) {
+    // ¿La punta del texto (su primera o su última línea) se ve en pantalla?
+    function extremoALaVista(edge) {
       const r = input.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const alreadyThere = edge === "top" ? r.top >= -8 : r.bottom <= vh + 8;
-      window.scrollTo({ top: window.scrollY + r[edge] - 8, behavior: "smooth" });
-      if (alreadyThere) flashEditor(); else hideFlash();
+      return edge === "inicio" ? r.top >= -8 : r.bottom <= window.innerHeight + 8;
     }
 
-    btnUp.addEventListener("click", () => goToEditor("top"));
-    btnDown.addEventListener("click", () => goToEditor("bottom"));
+    function irAlExtremo(edge) {
+      const edgeRect = edge === "inicio" ? "top" : "bottom";
+      // 1) Lo primero: mover el texto dentro del cuadro. Si el cuadro tiene
+      //    barra propia (el usuario lo estiró, o en una pantalla baja), esto
+      //    es justo lo que se espera de una flecha dentro del texto.
+      const destinoDentro = edge === "inicio" ? 0 : input.scrollHeight;
+      if (input.scrollHeight > input.clientHeight + 1) {
+        input.scrollTo({ top: destinoDentro, behavior: "smooth" });
+      }
+
+      // 2) Lo segundo: si la punta del texto sigue fuera de la pantalla (el
+      //    caso normal cuando el cuadro crece sin límite), se mueve la página
+      //    hasta ella.
+      if (!extremoALaVista(edge)) {
+        const r = input.getBoundingClientRect();
+        window.scrollTo({ top: window.scrollY + r[edgeRect] - 8, behavior: "smooth" });
+        hideFlash();
+        return;
+      }
+
+      // Ya estaba a la vista: el salto no movió la página, así que se avisa
+      // con un parpadeo para que se vea de qué extremo del texto se trata.
+      flashEditor();
+    }
+
+    btnUp.addEventListener("click", () => irAlExtremo("inicio"));
+    btnDown.addEventListener("click", () => irAlExtremo("fin"));
 
     if (toggle) {
       toggle.checked = enabled;

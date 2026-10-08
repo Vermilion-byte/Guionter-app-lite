@@ -7,8 +7,10 @@ Comprueba, en un navegador real, que:
      invisible interceptaría clics de lo que hay debajo);
   3. la flecha de subir devuelve el inicio del texto a la vista;
   4. la flecha de bajar lleva al final del texto;
-  5. las flechas no se pisan entre sí ni con el contador flotante;
-  6. el interruptor lo apaga y lo enciende, y la preferencia se recuerda.
+  5. con el cuadro de texto con barra propia (ventana baja), las flechas mueven
+     primero el texto DENTRO del cuadro y solo después la página;
+  6. las flechas no se pisan entre sí ni con el contador flotante;
+  7. el interruptor lo apaga y lo enciende, y la preferencia se recuerda.
 
 Uso:
 
@@ -45,6 +47,7 @@ def _index_por_defecto():
 INDEX_POR_DEFECTO = _index_por_defecto()
 
 VIEWPORT_H = 800
+VIEWPORT_ALTO_CORTO = 480
 FIXTURE = "\n\n".join(
     f"Párrafo {i}: " + ("texto de prueba para que el guion sea largo. " * 12)
     for i in range(1, 46)
@@ -226,6 +229,53 @@ def main():
         page.check("#floatNavToggle")
         page.wait_for_timeout(300)
         check("y se puede volver a encender", page.is_checked("#floatNavToggle"))
+
+        browser.close()
+
+    # ------------------------------------------------------------------
+    # Ventana baja: el cuadro de texto se queda sin sitio, así que tiene barra
+    # propia. Aquí las flechas deben mover el texto DENTRO del cuadro (que era
+    # lo que hacía falta) y solo después la página.
+    # ------------------------------------------------------------------
+    print("7) Con el cuadro con barra propia, las flechas mueven el texto dentro")
+    with sync_playwright() as p:
+        browser = lanzar_navegador(p)
+        page = browser.new_page(viewport={"width": 1280, "height": VIEWPORT_ALTO_CORTO})
+        page.goto(ruta.as_uri())
+        page.wait_for_load_state("load")
+        page.fill("#input", FIXTURE)
+        page.wait_for_timeout(700)
+        mover(page, 0)
+
+        tiene_barra = page.evaluate(
+            "() => { const i = document.getElementById('input'); return i.scrollHeight > i.clientHeight + 1; }"
+        )
+        print(f"   el cuadro tiene barra propia: {tiene_barra}")
+        check("en una ventana baja el cuadro tiene barra propia", tiene_barra)
+        if tiene_barra:
+            print("   - la flecha de bajar mueve el texto, no la pagina de golpe")
+            y_antes = estado(page)["scrollY"]
+            page.click("#btnFloatDown")
+            page.wait_for_timeout(900)
+            dentro = page.evaluate("() => document.getElementById('input').scrollTop")
+            y_despues = estado(page)["scrollY"]
+            print(f"     posicion dentro del cuadro: {dentro} | pagina: {y_antes} -> {y_despues}")
+            check("el texto se movio dentro del cuadro", dentro > 0, f"scrollTop={dentro}")
+            check("el final del texto quedo a la vista",
+                  estado(page)["editor"]["bottom"] <= VIEWPORT_ALTO_CORTO + 8, str(estado(page)["editor"]))
+
+            print("   - la flecha de subir devuelve al principio del texto")
+            page.click("#btnFloatUp")
+            page.wait_for_timeout(900)
+            e = estado(page)
+            dentro = page.evaluate("() => document.getElementById('input').scrollTop")
+            print(f"     posicion dentro del cuadro: {dentro} | editor: {e['editor']}")
+            # Con la ventana baja, el cuadro no cabe entero: lo que importa es
+            # que la PRIMERA linea del texto quede a la vista y que la pagina
+            # no se haya ido al final del todo.
+            check("el principio del texto quedo a la vista", -8 <= e["editor"]["top"] <= 40, str(e["editor"]))
+            check("el cuadro no se bajo al final de la pagina", e["scrollY"] < e["maxScroll"] - 50,
+                  f"scrollY={e['scrollY']} max={e['maxScroll']}")
 
         browser.close()
 
