@@ -22,6 +22,9 @@
       words: "Palabras",
       chars: "Caracteres (con espacios)",
       floatCharToggle: "Mostrar contador flotante al bajar",
+      floatNavUp: "Subir al inicio del texto",
+      floatNavDown: "Bajar al final del texto",
+      floatNavToggle: "Mostrar botón flotante para subir y bajar",
       charsNoSpace: "Caracteres (sin espacios)",
       sentences: "Oraciones",
       paragraphs: "Párrafos",
@@ -199,6 +202,9 @@
       words: "Words",
       chars: "Characters (with spaces)",
       floatCharToggle: "Show floating counter while scrolling",
+      floatNavUp: "Go to the start of the text",
+      floatNavDown: "Go to the end of the text",
+      floatNavToggle: "Show floating button to jump up and down",
       charsNoSpace: "Characters (no spaces)",
       sentences: "Sentences",
       paragraphs: "Paragraphs",
@@ -397,6 +403,9 @@
     if ($("floatCharLabel")) $("floatCharLabel").textContent = t.chars;
     if ($("floatCharStat")) $("floatCharStat").setAttribute("aria-label", t.chars);
     if ($("t-floatCharToggle")) $("t-floatCharToggle").textContent = t.floatCharToggle;
+    if ($("t-floatNavToggle")) $("t-floatNavToggle").textContent = t.floatNavToggle;
+    if ($("btnFloatUp")) $("btnFloatUp").setAttribute("aria-label", t.floatNavUp);
+    if ($("btnFloatDown")) $("btnFloatDown").setAttribute("aria-label", t.floatNavDown);
     $("t-charsNoSpace").textContent = t.charsNoSpace;
     $("t-sentences").textContent = t.sentences;
     $("t-paragraphs").textContent = t.paragraphs;
@@ -2671,6 +2680,122 @@
   }
 
   input.value = loadDraft();
+
+  // ---------------------------------------------------------------------
+  // Botón flotante para moverse por el texto (subir al inicio / bajar al
+  // final). El panel de texto crece con el contenido, así que al desplazarse
+  // el editor se va de la vista y volver arriba a mano es incómodo en textos
+  // largos. El botón aparece justo en ese momento —al bajar o al subir— y se
+  // esconde cuando el editor vuelve a estar a la vista. Cada flecha se
+  // muestra solo si sirve: la de subir si el inicio quedó arriba, la de
+  // bajar si el final está más abajo.
+  // ---------------------------------------------------------------------
+  const FLOAT_NAV_KEY = "guionter-float-nav-enabled";
+
+  function loadFloatNavEnabled() {
+    try {
+      const raw = localStorage.getItem(FLOAT_NAV_KEY);
+      return raw === null ? true : raw === "1"; // activado por defecto
+    } catch (e) {
+      return true;
+    }
+  }
+
+  function saveFloatNavEnabled(enabled) {
+    try { localStorage.setItem(FLOAT_NAV_KEY, enabled ? "1" : "0"); } catch (e) { /* ignore */ }
+  }
+
+  function setupFloatingNav() {
+    const nav = $("floatNav");
+    const btnUp = $("btnFloatUp");
+    const btnDown = $("btnFloatDown");
+    const toggle = $("floatNavToggle");
+    const editorCard = input ? input.closest(".editor-card") : null;
+    if (!nav || !btnUp || !btnDown || !input) return;
+
+    let enabled = loadFloatNavEnabled();
+    let flashTimer = null;
+
+    function update() {
+      if (!enabled) {
+        nav.classList.remove("show");
+        nav.dataset.hide = "1";
+        return;
+      }
+      const r = input.getBoundingClientRect();
+      const vh = window.innerHeight;
+      // Un margen de 8px evita que el botón parpadee justo en el borde.
+      const topHidden = r.top < -8;
+      const bottomHidden = r.bottom > vh + 8;
+      const anyHidden = topHidden || bottomHidden;
+      nav.dataset.pos = topHidden && bottomHidden ? "both" : topHidden ? "up" : bottomHidden ? "down" : "none";
+      nav.classList.toggle("show", anyHidden);
+      // Con el editor a la vista no sirve ninguna flecha: se quitan del todo
+      // para que no intercepten clics de lo que haya debajo.
+      nav.dataset.hide = anyHidden ? "0" : "1";
+    }
+
+    // El editor vuelve a estar a la vista (ya sea por el salto o porque el
+    // usuario se desplazó solo): el aviso tiene que irse.
+    function hideFlash() {
+      if (!editorCard) return;
+      window.clearTimeout(flashTimer);
+      editorCard.classList.remove("flash");
+    }
+
+    // Si el salto no mueve nada porque el texto ya está a la vista, el editor
+    // parpadea un instante para que se vea dónde empieza y dónde termina.
+    function flashEditor() {
+      if (!editorCard) return;
+      window.clearTimeout(flashTimer);
+      editorCard.classList.remove("flash");
+      void editorCard.offsetWidth; // reinicia la animación si se repite
+      editorCard.classList.add("flash");
+      flashTimer = window.setTimeout(() => editorCard.classList.remove("flash"), 900);
+    }
+
+    function goToEditor(edge) {
+      const r = input.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const alreadyThere = edge === "top" ? r.top >= -8 : r.bottom <= vh + 8;
+      window.scrollTo({ top: window.scrollY + r[edge] - 8, behavior: "smooth" });
+      if (alreadyThere) flashEditor(); else hideFlash();
+    }
+
+    btnUp.addEventListener("click", () => goToEditor("top"));
+    btnDown.addEventListener("click", () => goToEditor("bottom"));
+
+    if (toggle) {
+      toggle.checked = enabled;
+      toggle.addEventListener("change", () => {
+        enabled = toggle.checked;
+        saveFloatNavEnabled(enabled);
+        update();
+      });
+    }
+
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    // Al volver a la pestaña la posición puede haber cambiado (por ejemplo,
+    // el borrador restaurado hizo crecer el editor).
+    document.addEventListener("visibilitychange", update);
+    // El editor también se desplaza por dentro cuando es bajo o cuando se
+    // escribe una línea nueva muy abajo.
+    input.addEventListener("scroll", update, { passive: true });
+    input.addEventListener("scroll", hideFlash, { passive: true });
+
+    if ("IntersectionObserver" in window) {
+      // Referencia: cuando el editor entero está a la vista, no hay nada que
+      // avisar, así que se quita cualquier parpadeo pendiente.
+      new IntersectionObserver((entries) => {
+        for (const entry of entries) if (entry.isIntersecting) hideFlash();
+      }, { threshold: 0.6 }).observe(input);
+    }
+
+    update();
+  }
+
   applyTranslations();
   setupFloatingCharStat();
+  setupFloatingNav();
 })();
