@@ -50,6 +50,9 @@
       downloadSrt: "SRT",
       downloadSrtTitle: "Descargar el guion como subtítulos (.srt) con tiempos estimados por párrafo",
       downloadSrtError: "No se pudo generar el archivo .srt.",
+      downloadMd: "Markdown",
+      downloadMdTitle: "Descargar el texto como Markdown (.md), con título y resumen, listo para pegar en Notion, Obsidian o GitHub",
+      downloadMdError: "No se pudo generar el archivo .md.",
       exportConfig: "Backup",
       exportConfigTitle: "Exportar tu diccionario TTS y guiones guardados en un archivo",
       exportConfigError: "No se pudo generar el archivo de respaldo.",
@@ -230,6 +233,9 @@
       downloadSrt: "SRT",
       downloadSrtTitle: "Download the script as subtitles (.srt) with estimated per-paragraph timing",
       downloadSrtError: "Could not generate the .srt file.",
+      downloadMd: "Markdown",
+      downloadMdTitle: "Download the text as Markdown (.md), with title and summary, ready to paste into Notion, Obsidian or GitHub",
+      downloadMdError: "Could not generate the .md file.",
       exportConfig: "Backup",
       exportConfigTitle: "Export your TTS dictionary and saved scripts into a file",
       exportConfigError: "Could not generate the backup file.",
@@ -427,6 +433,8 @@
     $("btnPdf").title = t.downloadPdfTitle;
     $("t-downloadSrt").textContent = t.downloadSrt;
     $("btnSrt").title = t.downloadSrtTitle;
+    $("t-downloadMd").textContent = t.downloadMd;
+    $("btnMd").title = t.downloadMdTitle;
     $("t-exportConfig").textContent = t.exportConfig;
     $("btnExportConfig").title = t.exportConfigTitle;
     $("t-importConfig").textContent = t.importConfig;
@@ -1007,6 +1015,80 @@
       blob,
       lang === "es" ? "No se pudo guardar el PDF." : "Could not save the PDF."
     );
+  }
+
+  // ---------------------------------------------------------------------
+  // Markdown export (.md). Mismo contenido que el Word y el PDF —título,
+  // resumen con las estadísticas y el texto— para que los tres documentos
+  // salgan coherentes, pero en Markdown para poder pegarlo en Notion,
+  // Obsidian, GitHub, un blog o donde haga falta.
+  // ---------------------------------------------------------------------
+  function markdownParagraph(parrafo) {
+    // El orden importa: primero las barras invertidas que ya traía el texto
+    // (para no confundirlas con las que añadimos nosotros), después el formato
+    // en línea y, al final, los caracteres con significado al inicio de línea.
+    // Los guiones bajos sueltos dentro de una palabra (guion_bajo) no se
+    // escapan a propósito: en español y en inglés aparecen en palabras
+    // normales, y ahí Markdown no les da ningún significado.
+    let linea = parrafo
+      .replace(/[ \t]+$/g, "")
+      .replace(/\\/g, "\\\\")
+      .replace(/`/g, "\\`")
+      .replace(/\*\*/g, "\\*\\*")
+      .replace(/__/g, "\\_\\_");
+
+    // Al inicio de línea, # crea títulos, > citas y -/+ listas; si el texto
+    // empieza por ahí, se escapa para que se lea tal cual se escribió.
+    if (/^\s*(#{1,6}\s|>|[-+]\s|\d+[.)]\s)/.test(linea)) {
+      linea = linea.replace(/^(\s*)(#{1,6}|>|[-+]|\d+[.)])/, "$1\\$2");
+    }
+    return linea;
+  }
+
+  // Título del documento: el que se haya generado o escrito en el generador de
+  // títulos; si no, el nombre del guion guardado; si no, el genérico.
+  function documentTitle() {
+    const t = STR[lang];
+    const campo = document.getElementById("titleGenInput");
+    const delGenerador = campo && campo.value.trim();
+    if (delGenerador) return delGenerador;
+    const nombre = document.getElementById("scriptName");
+    const delGuion = nombre && nombre.value.trim();
+    if (delGuion) return delGuion;
+    return t.title;
+  }
+
+  function buildMarkdownDocument(text, r) {
+    const t = STR[lang];
+    const lineas = [];
+    lineas.push(`# ${markdownParagraph(documentTitle())}`);
+    lineas.push("");
+    lineas.push(`## ${t.pdfStatsHeading}`);
+    lineas.push("");
+    buildSummaryLines(r).forEach((linea) => lineas.push(`- ${linea}`));
+    lineas.push("");
+    lineas.push("---");
+    lineas.push("");
+    // Un párrafo por bloque, tal como se escribió (los saltos simples dentro
+    // de un párrafo no se parten: en Markdown un salto simple no significa
+    // nada, así que respetarlo daría un archivo distinto al que se ve).
+    text.split(/\n{2,}/).forEach((bloque) => {
+      const limpio = bloque.trim();
+      if (!limpio) return;
+      lineas.push(markdownParagraph(limpio));
+      lineas.push("");
+    });
+    return lineas.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd() + "\n";
+  }
+
+  async function downloadMarkdown() {
+    const t = STR[lang];
+    const text = input.value;
+    if (!text.trim()) { flashDownloadStatus(t.downloadEmpty); return; }
+    const r = analyze(text);
+    const md = buildMarkdownDocument(text, r);
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+    await saveGeneratedFile("guionter-texto.md", blob, t.downloadMdError);
   }
 
   // ---------------------------------------------------------------------
@@ -2434,6 +2516,7 @@
   $("btnWord").addEventListener("click", downloadWord);
   $("btnPdf").addEventListener("click", downloadPdf);
   $("btnSrt").addEventListener("click", downloadSrt);
+  $("btnMd").addEventListener("click", downloadMarkdown);
   $("btnExportConfig").addEventListener("click", exportConfigBackup);
   $("btnImportConfig").addEventListener("click", () => $("importConfigFile").click());
   $("importConfigFile").addEventListener("change", async (e) => {
