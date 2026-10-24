@@ -1,7 +1,7 @@
 /* Service worker sencillo: cachea los archivos de la app para que
    funcione sin conexión (excepto el chequeo gramatical, que necesita
    internet para llamar a la API de LanguageTool). */
-const CACHE_NAME = "guionter-cache-v2";
+const CACHE_NAME = "guionter-cache-v3";
 const ASSETS = [
   "./",
   "./index.html",

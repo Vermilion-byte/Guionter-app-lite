@@ -2472,8 +2472,13 @@
     scheduleDraftSave();
   });
 
+  // El idioma y el tema se recuerdan entre visitas (por navegador).
+  const LANG_KEY = "guionter-lang";
+  const THEME_KEY = "guionter-theme";
+
   $("langSelect").addEventListener("change", (e) => {
     lang = e.target.value;
+    try { localStorage.setItem(LANG_KEY, lang); } catch (err) { /* ignore */ }
     applyTranslations();
   });
 
@@ -2500,7 +2505,25 @@
     if (current === "dark") root.setAttribute("data-theme", "light");
     else if (current === "light") root.removeAttribute("data-theme");
     else root.setAttribute("data-theme", "dark");
+    try { localStorage.setItem(THEME_KEY, root.getAttribute("data-theme") || "auto"); } catch (err) { /* ignore */ }
   });
+
+  // Restaura el idioma y el tema guardados. "auto" (o nada guardado) deja que
+  // el tema siga al del sistema, que es el comportamiento por defecto.
+  (function restoreLangAndTheme() {
+    let savedLang = null, savedTheme = null;
+    try {
+      savedLang = localStorage.getItem(LANG_KEY);
+      savedTheme = localStorage.getItem(THEME_KEY);
+    } catch (err) { /* storage unavailable */ }
+    if (savedLang && STR[savedLang]) {
+      lang = savedLang;
+      $("langSelect").value = savedLang;
+    }
+    if (savedTheme === "dark" || savedTheme === "light") {
+      document.documentElement.setAttribute("data-theme", savedTheme);
+    }
+  })();
 
   ["tab1", "tab2", "tab3"].forEach(id => {
     $(id).addEventListener("click", (e) => {

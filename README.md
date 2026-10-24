@@ -2,7 +2,7 @@
 
 Analizador de texto bilingüe (ES/EN): conteo de palabras/caracteres/oraciones/párrafos,
 tiempo de lectura y de habla, nivel de lectura, densidad de palabras clave, corrector
-ortográfico y gramatical, exportación a Word/PDF, y un diccionario de pronunciación +
+ortográfico y gramatical, exportación a Word/PDF/SRT/Markdown, y un diccionario de pronunciación +
 adaptación de citas numéricas para preparar texto antes de pasarlo a cualquier TTS.
 
 100% en el navegador (sin backend), funciona sin conexión salvo el chequeo gramatical
@@ -25,3 +25,14 @@ abres el archivo directamente con `file://`.
 
 **Alternativa rápida:** abre `index.html` directamente en el navegador. La app funciona
 igual, pero sin caché sin conexión ni opción de instalarla como app.
+
+## Pruebas
+
+Necesitan Python con Playwright (`pip install playwright`). Usan el Chromium de
+Playwright o, si no está, el Chrome/Edge del equipo.
+
+```powershell
+python tests\test_float_nav.py        # botón flotante para subir y bajar
+python tests\test_markdown_export.py  # exportación a Markdown
+python tests\test_lang_theme.py       # el idioma y el tema se recuerdan
+```
