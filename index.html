@@ -350,6 +350,8 @@
   }
   .float-nav-up{bottom:50px;}   /* encima de la flecha de bajar */
   .float-nav-down{bottom:0;}
+  /* Si solo se ofrece la de subir, ocupa el sitio de la de bajar. */
+  .float-nav[data-pos="up"] .float-nav-up{bottom:0;}
   .float-nav.show[data-hide="0"][data-pos="both"] .float-nav-btn,
   .float-nav.show[data-hide="0"][data-pos="up"] .float-nav-up,
   .float-nav.show[data-hide="0"][data-pos="down"] .float-nav-down{
@@ -821,12 +823,22 @@
   </div>
 
   <!-- Botón flotante para moverse por el texto: sube al inicio del editor o
-       baja al final. Aparece al alejarse del editor, en cualquier dirección. -->
+       baja al final. Aparece al alejarse del editor, en cualquier dirección.
+       Hay uno a cada lado del cuadro del editor; app.js los coloca. -->
   <div class="float-nav" id="floatNav" data-pos="both" data-hide="1">
     <button class="float-nav-btn float-nav-up" id="btnFloatUp" type="button" aria-label="Subir al inicio del texto">
       <span aria-hidden="true">↑</span>
     </button>
     <button class="float-nav-btn float-nav-down" id="btnFloatDown" type="button" aria-label="Bajar al final del texto">
+      <span aria-hidden="true">↓</span>
+    </button>
+  </div>
+  <!-- El mismo botón al otro lado del editor. -->
+  <div class="float-nav float-nav-left" id="floatNavLeft" data-pos="both" data-hide="1">
+    <button class="float-nav-btn float-nav-up" id="btnFloatUpLeft" type="button" aria-label="Subir al inicio del texto">
+      <span aria-hidden="true">↑</span>
+    </button>
+    <button class="float-nav-btn float-nav-down" id="btnFloatDownLeft" type="button" aria-label="Bajar al final del texto">
       <span aria-hidden="true">↓</span>
     </button>
   </div>

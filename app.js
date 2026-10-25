@@ -410,8 +410,8 @@
     if ($("floatCharStat")) $("floatCharStat").setAttribute("aria-label", t.chars);
     if ($("t-floatCharToggle")) $("t-floatCharToggle").textContent = t.floatCharToggle;
     if ($("t-floatNavToggle")) $("t-floatNavToggle").textContent = t.floatNavToggle;
-    if ($("btnFloatUp")) $("btnFloatUp").setAttribute("aria-label", t.floatNavUp);
-    if ($("btnFloatDown")) $("btnFloatDown").setAttribute("aria-label", t.floatNavDown);
+    document.querySelectorAll(".float-nav-up").forEach(b => b.setAttribute("aria-label", t.floatNavUp));
+    document.querySelectorAll(".float-nav-down").forEach(b => b.setAttribute("aria-label", t.floatNavDown));
     $("t-charsNoSpace").textContent = t.charsNoSpace;
     $("t-sentences").textContent = t.sentences;
     $("t-paragraphs").textContent = t.paragraphs;
@@ -2817,33 +2817,66 @@
   }
 
   function setupFloatingNav() {
-    const nav = $("floatNav");
-    const btnUp = $("btnFloatUp");
-    const btnDown = $("btnFloatDown");
+    // Dos botones iguales, uno a cada lado del editor.
+    const navs = [
+      { nav: $("floatNav"), side: "right" },
+      { nav: $("floatNavLeft"), side: "left" }
+    ].filter(n => n.nav);
     const toggle = $("floatNavToggle");
     const editorCard = input ? input.closest(".editor-card") : null;
-    if (!nav || !btnUp || !btnDown || !input) return;
+    if (!navs.length || !input) return;
+
+    // Cada botón va montado sobre un borde del cuadro del editor (mitad
+    // dentro, mitad fuera), no en la orilla de la ventana. En vertical sigue
+    // al borde inferior del cuadro cuando se ve; si el cuadro quedó arriba se
+    // pega arriba, y si sigue abajo se queda abajo, por encima del contador
+    // flotante (NAV_BOTTOM_MIN).
+    const NAV_MARGIN = 8;
+    const NAV_BOTTOM_MIN = 76;   // el contador ocupa bottom:20px y mide ~44px
+    const NAV_STACK = 94;        // alto de las dos flechas juntas (44 + 50)
+    function place() {
+      const ref = (editorCard || input).getBoundingClientRect();
+      const vw = document.documentElement.clientWidth || window.innerWidth;
+      const vh = window.innerHeight;
+      const bottomMax = Math.max(NAV_BOTTOM_MIN, vh - NAV_STACK - NAV_MARGIN);
+      const NAV_CORNER = 14;       // la flecha queda un poco por encima de la esquina
+      const bottom = Math.max(NAV_BOTTOM_MIN, Math.min(vh - ref.bottom + NAV_CORNER, bottomMax));
+      navs.forEach(({ nav, side }) => {
+        const w = nav.offsetWidth || 44;
+        let x = (side === "left" ? ref.left : ref.right) - w / 2;
+        x = Math.max(NAV_MARGIN, Math.min(x, vw - w - NAV_MARGIN));
+        nav.style.left = `${Math.round(x)}px`;
+        nav.style.right = "auto";
+        nav.style.bottom = `${Math.round(bottom)}px`;
+      });
+    }
 
     let enabled = loadFloatNavEnabled();
     let flashTimer = null;
 
     function update() {
       if (!enabled) {
-        nav.classList.remove("show");
-        nav.dataset.hide = "1";
+        navs.forEach(({ nav }) => {
+          nav.classList.remove("show");
+          nav.dataset.hide = "1";
+        });
         return;
       }
+      place();
       const r = input.getBoundingClientRect();
       const vh = window.innerHeight;
       // Un margen de 8px evita que el botón parpadee justo en el borde.
       const topHidden = r.top < -8;
       const bottomHidden = r.bottom > vh + 8;
       const anyHidden = topHidden || bottomHidden;
-      nav.dataset.pos = topHidden && bottomHidden ? "both" : topHidden ? "up" : bottomHidden ? "down" : "none";
-      nav.classList.toggle("show", anyHidden);
-      // Con el editor a la vista no sirve ninguna flecha: se quitan del todo
-      // para que no intercepten clics de lo que haya debajo.
-      nav.dataset.hide = anyHidden ? "0" : "1";
+      const pos = topHidden && bottomHidden ? "both" : topHidden ? "up" : bottomHidden ? "down" : "none";
+      navs.forEach(({ nav }) => {
+        nav.dataset.pos = pos;
+        nav.classList.toggle("show", anyHidden);
+        // Con el editor a la vista no sirve ninguna flecha: se quitan del
+        // todo para que no intercepten clics de lo que haya debajo.
+        nav.dataset.hide = anyHidden ? "0" : "1";
+      });
     }
 
     // El editor vuelve a estar a la vista (ya sea por el salto o porque el
@@ -2896,8 +2929,10 @@
       flashEditor();
     }
 
-    btnUp.addEventListener("click", () => irAlExtremo("inicio"));
-    btnDown.addEventListener("click", () => irAlExtremo("fin"));
+    navs.forEach(({ nav }) => {
+      nav.querySelector(".float-nav-up").addEventListener("click", () => irAlExtremo("inicio"));
+      nav.querySelector(".float-nav-down").addEventListener("click", () => irAlExtremo("fin"));
+    });
 
     if (toggle) {
       toggle.checked = enabled;

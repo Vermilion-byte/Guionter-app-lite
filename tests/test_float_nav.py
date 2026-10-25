@@ -10,6 +10,8 @@ Comprueba, en un navegador real, que:
   5. con el cuadro de texto con barra propia (ventana baja), las flechas mueven
      primero el texto DENTRO del cuadro y solo después la página;
   6. las flechas no se pisan entre sí ni con el contador flotante;
+  6b. hay un botón a cada lado del editor, montado sobre su borde, y siguen al
+     borde inferior del cuadro cuando se ve;
   7. el interruptor lo apaga y lo enciende, y la preferencia se recuerda.
 
 Uso:
@@ -121,6 +123,33 @@ def solapan(a, b):
                 or a["bottom"] <= b["top"] or b["bottom"] <= a["top"])
 
 
+def lados(page):
+    """Los dos botones (izquierda y derecha) frente al cuadro del editor."""
+    return page.evaluate(
+        """() => {
+            const card = (document.getElementById('input').closest('.editor-card') || document.getElementById('input')).getBoundingClientRect();
+            const vis = (sel) => { const el = document.querySelector(sel); return !!el && getComputedStyle(el).display !== 'none'; };
+            const rect = (sel) => { const b = document.querySelector(sel).getBoundingClientRect(); return {top: Math.round(b.top), bottom: Math.round(b.bottom), left: Math.round(b.left), right: Math.round(b.right)}; };
+            const visible = (id) => { const up = '#' + id + ' .float-nav-up', down = '#' + id + ' .float-nav-down';
+                return vis(up) ? rect(up) : vis(down) ? rect(down) : null; };
+            const n = (id) => document.getElementById(id);
+            return {
+                card: {left: Math.round(card.left), right: Math.round(card.right), top: Math.round(card.top), bottom: Math.round(card.bottom)},
+                vh: window.innerHeight,
+                existe: !!n('floatNavLeft'),
+                mismo: n('floatNavLeft') && n('floatNav').dataset.pos === n('floatNavLeft').dataset.pos
+                       && n('floatNav').dataset.hide === n('floatNavLeft').dataset.hide
+                       && n('floatNav').classList.contains('show') === n('floatNavLeft').classList.contains('show'),
+                der: visible('floatNav'),
+                izq: n('floatNavLeft') ? visible('floatNavLeft') : null,
+                showIzq: n('floatNavLeft') ? n('floatNavLeft').classList.contains('show') : false,
+                badge: rect('#floatCharStat'),
+                badgeVis: document.getElementById('floatCharStat').classList.contains('show'),
+            };
+        }"""
+    )
+
+
 def mover(page, y, espera=500):
     page.evaluate(f"window.scrollTo(0, {y})")
     page.wait_for_timeout(espera)
@@ -173,6 +202,40 @@ def main():
         else:
             print("   (el contador flotante no está visible ahora mismo)")
 
+        print("2b) Hay un botón a cada lado del editor, pegado al cuadro")
+        mover(page, int(max_scroll * 0.6))
+        L = lados(page)
+        check("existe el botón de la izquierda", L["existe"])
+        check("los dos muestran lo mismo", bool(L["mismo"]))
+        if L["der"] and L["izq"]:
+            centro_der = (L["der"]["left"] + L["der"]["right"]) / 2
+            centro_izq = (L["izq"]["left"] + L["izq"]["right"]) / 2
+            check("el de la derecha va sobre el borde derecho del cuadro",
+                  abs(centro_der - L["card"]["right"]) <= 30, f"centro={centro_der} borde={L['card']['right']}")
+            check("el de la izquierda va sobre el borde izquierdo del cuadro (o lo más cerca que cabe)",
+                  abs(centro_izq - L["card"]["left"]) <= 30, f"centro={centro_izq} borde={L['card']['left']}")
+            check("cada uno queda de su lado", centro_izq < centro_der)
+            check("están a la misma altura", L["der"]["top"] == L["izq"]["top"], f"{L['der']['top']} / {L['izq']['top']}")
+            if L["badgeVis"]:
+                check("ninguno tapa el contador flotante",
+                      not solapan(L["der"], L["badge"]) and not solapan(L["izq"], L["badge"]),
+                      f"contador={L['badge']} der={L['der']} izq={L['izq']}")
+        # Cuando el borde de abajo del cuadro se ve, las flechas lo acompañan.
+        e = estado(page)
+        mover(page, int(e["editor"]["bottom"] + e["scrollY"] - VIEWPORT_H * 0.5))
+        L = lados(page)
+        if L["der"] and 0 < L["card"]["bottom"] < L["vh"] - 120:
+            check("siguen al borde inferior del cuadro cuando se ve",
+                  abs(L["der"]["bottom"] - L["card"]["bottom"]) <= 30,
+                  f"flecha={L['der']['bottom']} borde={L['card']['bottom']}")
+        if L["izq"]:
+            page.click("#floatNavLeft .float-nav-up")
+            page.wait_for_timeout(1500)
+            e = estado(page)
+            check("la flecha de la izquierda también sube al inicio", -8 <= e["editor"]["top"] <= 40, str(e["editor"]))
+
+        mover(page, int(max_scroll * 0.6))
+        e = estado(page)
         print("3) La flecha de subir devuelve el inicio del texto a la vista")
         check("la flecha de subir está disponible", e["up"] and e["show"], f"pos={e['pos']}")
         if e["up"] and e["show"]:
@@ -210,6 +273,7 @@ def main():
         page.wait_for_timeout(400)
         e = estado(page)
         check("desaparece al apagarlo", not e["show"])
+        check("el de la izquierda también desaparece", not lados(page)["showIzq"])
         check("sus flechas dejan de interceptar clics", e["hide"] == "1", f"hide={e['hide']}")
         page.check("#floatNavToggle")
         page.wait_for_timeout(500)
